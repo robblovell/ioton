@@ -247,8 +247,7 @@
         return indexStack.push(index);
       };
       setArray = function(value) {
-        var index, tag, type;
-        index = indexStack.peek();
+        var tag, type;
         tag = stack.peek()[2][0];
         type = stack.peek()[2][1];
         if (tag !== "") {

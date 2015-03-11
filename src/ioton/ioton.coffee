@@ -85,7 +85,6 @@ module.exports = class IOTON
     # This method parses an IOTON text to produce an object or array.
     #
     # It can throw a SyntaxError exception.
-
     parse: (buffer, schema) ->
         objects = objectify(buffer, schema)
         return objects
@@ -185,7 +184,6 @@ module.exports = class IOTON
             indexStack.push(index)
 
         setArray = (value) ->
-            index = indexStack.peek()
             tag = stack.peek()[2][0] #[(index)*2]
             type = stack.peek()[2][1] #[(index)*2+1]
             if (tag isnt "")
@@ -195,7 +193,6 @@ module.exports = class IOTON
             else
                 value = makeValue(value,type, tag)
                 stack.peek()[0].push(value) # [value, value.toString(), tag, type])
-#            indexStack.push(index)
 
         set = (value) ->
             if (!stack.isEmpty())
