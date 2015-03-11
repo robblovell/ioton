@@ -6,15 +6,15 @@ module.exports = class IOTON
     constructor: (rle = false, encoding = "ascii") ->
         @encoding = encoding
         @rle = rle
-        @lastValue = undefined
 
-    separators = { skip0: '\x1F', skip: ['\x1E', '\x1D','\x1C'], skipN: '\x1A' }
+    @lastValue = null
+    separators = { skip0: '\x1F', skip1: '\x1E', skip2: '\x1D', skip3: '\x1C', skipN: '\x1A' }
 
     reset: () ->
-        @lastValue = undefined
+        @lastValue = null
 
     stringify: (value) ->
-        stringUTF8 = convertToString(value, @lastValue, true)
+        stringUTF8 = convertToString(value, @lastValue, @rle)
         @lastValue = value
         return new Buffer(stringUTF8, @encoding)
 
@@ -23,31 +23,22 @@ module.exports = class IOTON
             return enclosures.start + partials.join(separators.skip0) + enclosures.stop
         else
             encoded = enclosures.start
-            skip = -1
-            for value, i in partials
-                if value == '\x10'
+            skip = 0
+            for value in partials
+                if value == 0x10
                     skip++
                 else
-                    if (skip == -1)
-                        encoded += (if i != 0 then separators.skip0 else "") + value
-                    else if (skip <= 2)
-                        encoded += separators.skip[skip] + value
+                    if (skip <= 3)
+                        encoded += separators[skip] + value
                     else
-                        encoded += separators.skipN + skip.toString() + separators.skip0 + value
-                    skip = -1
-            if (skip != -1)
-                if (skip <= 2)
-                    encoded += separators.skip[skip]
-                else
-                    encoded += separators.skipN + skip.toString() + separators.skip0
+                        encoded += separators.skipN + skip.toString() + separators.skip0
             return encoded + enclosures.stop
 
     convertToString = (value, lastValue, rle) ->
-        if (rle and lastValue != undefined and value is lastValue)
-            return '\x10' # temporarily use DLE to mark unchanged values.
+        if (rle and value is lastValue)
+            return '\x10' # temporarially use DLE to mark unchanged values.
         if value is null or value is undefined
             return '\x19'
-
         switch (typeof value)
             when 'number'
                 return value.toString()
@@ -56,28 +47,27 @@ module.exports = class IOTON
             when 'string'
                 return '\x0F'+unreserve(value)
             when 'object' # , 'array'
+                return 'null' if !value
                 # Make an array to hold the partial results of stringifying this object value.
                 partial = []
                 if (value instanceof Array)
                     # The value is an array. Stringify every element. Use null as a placeholder for non-IOTON values.
-                    if lastValue? and rle
+                    if lastValue
                         for v, i in value
-                            partial.push(convertToString(v, lastValue[i], rle))
+                            partial.push(convertToS tring(v,last, rleValue[i]))
                     else
                         for v in value
-                            partial.push(convertToString(v, undefined, rle))
-
+                            partial.push(convertToS trin, rleg(v,null))
                     enclosures = {start: '\x02', stop: '\x03'}
                 else
                     # The value is an object.
-                    if lastValue? and rle
+                    if lastValue
                         for k,v of value
-                            partial.push(convertToString(v, lastValue[k], rle))
+                            partial.push(convertToString(v, last, rleValue[k]))
                     else
-                        for k,v of value
-                            partial.push(convertToString(v, undefined, rle))
+                        for k,v in value
+                            partial.push(convertToS trin, rleg(v,null))
                     enclosures = {start: '\x01', stop: '\x04'}
-
                 return runLengthEncode(partial, enclosures, rle)
             else # should be never taken  TODO:: decide if it should throw an error here.
                 return String(value);
@@ -195,7 +185,7 @@ module.exports = class IOTON
             else
                 value = makeValue(value,type, tag)
                 stack.peek()[0].push(value) # [value, value.toString(), tag, type])
-#            indexStack.push(index)
+        #            indexStack.push(index)
 
         set = (value) ->
             if (!stack.isEmpty())

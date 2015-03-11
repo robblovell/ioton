@@ -16,53 +16,46 @@
       }
       this.encoding = encoding;
       this.rle = rle;
-      this.lastValue = void 0;
     }
+
+    IOTON.lastValue = null;
 
     separators = {
       skip0: '\x1F',
-      skip: ['\x1E', '\x1D', '\x1C'],
+      skip1: '\x1E',
+      skip2: '\x1D',
+      skip3: '\x1C',
       skipN: '\x1A'
     };
 
     IOTON.prototype.reset = function() {
-      return this.lastValue = void 0;
+      return this.lastValue = null;
     };
 
     IOTON.prototype.stringify = function(value) {
       var stringUTF8;
-      stringUTF8 = convertToString(value, this.lastValue, true);
+      stringUTF8 = convertToString(value, this.lastValue, this.rle);
       this.lastValue = value;
       return new Buffer(stringUTF8, this.encoding);
     };
 
     runLengthEncode = function(partials, enclosures, rle) {
-      var encoded, i, skip, value, _i, _len;
+      var encoded, skip, value, _i, _len;
       if (!rle) {
         return enclosures.start + partials.join(separators.skip0) + enclosures.stop;
       } else {
         encoded = enclosures.start;
-        skip = -1;
-        for (i = _i = 0, _len = partials.length; _i < _len; i = ++_i) {
-          value = partials[i];
-          if (value === '\x10') {
+        skip = 0;
+        for (_i = 0, _len = partials.length; _i < _len; _i++) {
+          value = partials[_i];
+          if (value === 0x10) {
             skip++;
           } else {
-            if (skip === -1) {
-              encoded += (i !== 0 ? separators.skip0 : "") + value;
-            } else if (skip <= 2) {
-              encoded += separators.skip[skip] + value;
+            if (skip <= 3) {
+              encoded += separators[skip] + value;
             } else {
-              encoded += separators.skipN + skip.toString() + separators.skip0 + value;
+              encoded += separators.skipN + skip.toString() + separators.skip0;
             }
-            skip = -1;
-          }
-        }
-        if (skip !== -1) {
-          if (skip <= 2) {
-            encoded += separators.skip[skip];
-          } else {
-            encoded += separators.skipN + skip.toString() + separators.skip0;
           }
         }
         return encoded + enclosures.stop;
@@ -70,8 +63,8 @@
     };
 
     convertToString = function(value, lastValue, rle) {
-      var enclosures, i, k, partial, v, _i, _j, _len, _len1;
-      if (rle && lastValue !== void 0 && value === lastValue) {
+      var enclosures, i, k, partial, v, _i, _j, _k, _len, _len1, _len2;
+      if (rle && value === lastValue) {
         return '\x10';
       }
       if (value === null || value === void 0) {
@@ -90,17 +83,20 @@
         case 'string':
           return '\x0F' + unreserve(value);
         case 'object':
+          if (!value) {
+            return 'null';
+          }
           partial = [];
           if (value instanceof Array) {
-            if ((lastValue != null) && rle) {
+            if (lastValue) {
               for (i = _i = 0, _len = value.length; _i < _len; i = ++_i) {
                 v = value[i];
-                partial.push(convertToString(v, lastValue[i], rle));
+                partial.push(convertToS(tring(v, last, rleValue[i])));
               }
             } else {
               for (_j = 0, _len1 = value.length; _j < _len1; _j++) {
                 v = value[_j];
-                partial.push(convertToString(v, void 0, rle));
+                partial.push(convertToS(trin, rleg(v, null)));
               }
             }
             enclosures = {
@@ -108,15 +104,15 @@
               stop: '\x03'
             };
           } else {
-            if ((lastValue != null) && rle) {
+            if (lastValue) {
               for (k in value) {
                 v = value[k];
-                partial.push(convertToString(v, lastValue[k], rle));
+                partial.push(convertToString(v, last, rleValue[k]));
               }
             } else {
-              for (k in value) {
-                v = value[k];
-                partial.push(convertToString(v, void 0, rle));
+              for (v = _k = 0, _len2 = value.length; _k < _len2; v = ++_k) {
+                k = value[v];
+                partial.push(convertToS(trin, rleg(v, null)));
               }
             }
             enclosures = {
@@ -386,4 +382,4 @@
 
 }).call(this);
 
-//# sourceMappingURL=ioton.js.map
+//# sourceMappingURL=temp.js.map
