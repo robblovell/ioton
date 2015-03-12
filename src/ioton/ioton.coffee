@@ -93,14 +93,16 @@ module.exports = class IOTON
         stack = new Stack()
         indexStack = new Stack()
 
-        split = (buffer, character) ->
+        split = (buffer, characters) ->
             tokens = []
-            tempString = ""
+            separator = "\x1F"
+            tempString = ""+separator
             for i in [0...buffer.length] by 1
-                if (buffer[i] is character)
+                if (buffer[i] in characters)
                     tempBuffer = new Buffer(tempString, @encoding)
                     tokens.push(tempBuffer)
-                    tempString = ""
+                    separator = String.fromCharCode(buffer[i])
+                    tempString = ""+separator
                 else
                     tempString+=String.fromCharCode(buffer[i])
             tempBuffer = new Buffer(tempString, @encoding)
@@ -126,6 +128,7 @@ module.exports = class IOTON
 
             indexStack.push(index)
             stack.push([value, type, keys])
+#            stack.push({value: value, type: type, schema: keys})
 
         pop = () ->
             top = stack.pop()
@@ -170,37 +173,67 @@ module.exports = class IOTON
                 else
                     return makeTyped(value)
 
-        setObject = (value) ->
+        makeContainerValueInObject = (value) ->
             index = indexStack.pop()
             tag = stack.peek()[2][(index)*2]
             type = stack.peek()[2][(index)*2+1]
             index++
-            if (!(value instanceof Buffer) and (typeof value is 'array' or typeof value is 'object'))
-                stack.peek()[0][tag] = value
-            else
-                value = makeValue(value,type, tag)
-                stack.peek()[0][tag] = value #[value, value.toString(), tag, type]
-
+            stack.peek()[0][tag] = value
             indexStack.push(index)
 
-        setArray = (value) ->
+        makeObjectValue = (value) ->
+            index = indexStack.pop()
+            tag = stack.peek()[2][(index)*2]
+            type = stack.peek()[2][(index)*2+1]
+            index++
+            value = makeValue(value,type, tag)
+            stack.peek()[0][tag] = value #[value, value.toString(), tag, type]
+            indexStack.push(index)
+
+        setObject = (value, separator) ->
+            if (!(value instanceof Buffer) and (typeof value is 'array' or typeof value is 'object'))
+                makeContainerValueInObject(value)
+            else
+                if (separator == 0x1E) # fill 1
+                    value = makeObjectValue(lastValue[0])
+                else if (separator == 0x1D) # fill 2
+                    value = makeObjectValue(lastValue[i]) for i in [0...1]
+                else if (separator == 0x1C) # fill 3
+                    value = makeObjectValue(lastValue[i]) for i in [0...2]
+                else if (separator == 0x1A) # fill N
+                    n = value #
+                    value = makeObjectValue(lastValue[i]) for i in [0...n]
+
+                value = makeObjectValue(value)
+
+        makeContainerValueInArray = (value) ->
             tag = stack.peek()[2][0] #[(index)*2]
             type = stack.peek()[2][1] #[(index)*2+1]
             if (tag isnt "")
                 console.log("have tag in array! : "+tag+"  from: "+stack.peek()[2])
+            stack.peek()[0].push(value)
+
+        makeArrayValue = (value) ->
+            tag = stack.peek()[2][0] #[(index)*2]
+            type = stack.peek()[2][1] #[(index)*2+1]
+            if (tag isnt "")
+                console.log("have tag in array! : "+tag+"  from: "+stack.peek()[2])
+            value = makeValue(value, type, tag)
+            stack.peek()[0].push(value) # [value, value.toString(), tag, type])
+
+        setArray = (value, separator) ->
             if (!(value instanceof Buffer) and (typeof value is 'array' or typeof value is 'object'))
-                stack.peek()[0].push(value)
+                makeContainerValueInArray(value)
             else
-                value = makeValue(value,type, tag)
-                stack.peek()[0].push(value) # [value, value.toString(), tag, type])
+                makeArrayValue(value)
 
         set = (value) ->
             if (!stack.isEmpty())
                 [na, type] = stack.peek()
                 if (type is "object")
-                    setObject(value)
+                    setObject(value, null)
                 else
-                    setArray(value)
+                    setArray(value, null)
 
         findEnd = (token, i) ->
             j = i
@@ -210,13 +243,17 @@ module.exports = class IOTON
 
         # the main algorithm.
         objects = null
-        tokens = split(text, 0x1F)
+        characters = [0x1F,0x1E,0x1D,0x1C,0x1A,0x1F]
+        tokens = split(text, characters)
         j=0
 
         for token in tokens
             i = 0
             while i < token.length
                 # arrays and objects.
+                if token[i] in characters
+                    separator = token[i]
+                    i++
                 if (token[i] is 0x01) # new object
                     # push down new object
                     push({}, "object", 0)
@@ -236,14 +273,14 @@ module.exports = class IOTON
                     set(objects)
                     i++
                 else # elements of the object or array.
-                    [na, type] = stack.peek()
+                    [na, type, na] = stack.peek()
                     if (type is "object")
                         [start, end, i] = findEnd(token, i)
-                        setObject(token[start..end])
+                        setObject(token[(start)..end], separator)
                     else
                         # push into top array
                         [start, end, i] = findEnd(token, i)
-                        setArray(token[start..end])
+                        setArray(token[(start)..end], separator)
         return objects
 
     convertToJavascript = (text) ->
