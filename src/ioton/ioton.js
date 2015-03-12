@@ -8,16 +8,11 @@
   module.exports = IOTON = (function() {
     var convertToJavascript, convertToString, number, objectify, runLengthEncode, sanatize, separators, unreserve;
 
-    function IOTON(rle, encoding) {
-      if (rle == null) {
-        rle = false;
-      }
+    function IOTON(encoding) {
       if (encoding == null) {
         encoding = "ascii";
       }
       this.encoding = encoding;
-      this.rle = rle;
-      this.lastValue = void 0;
     }
 
     separators = {
@@ -27,54 +22,21 @@
     };
 
     IOTON.prototype.reset = function() {
-      return this.lastValue = void 0;
+      return true;
     };
 
     IOTON.prototype.stringify = function(value) {
       var stringUTF8;
-      stringUTF8 = convertToString(value, this.lastValue, true);
-      this.lastValue = value;
+      stringUTF8 = convertToString(value);
       return new Buffer(stringUTF8, this.encoding);
     };
 
-    runLengthEncode = function(partials, enclosures, rle) {
-      var encoded, i, skip, value, _i, _len;
-      if (!rle) {
-        return enclosures.start + partials.join(separators.skip0) + enclosures.stop;
-      } else {
-        encoded = enclosures.start;
-        skip = -1;
-        for (i = _i = 0, _len = partials.length; _i < _len; i = ++_i) {
-          value = partials[i];
-          if (value === '\x10') {
-            skip++;
-          } else {
-            if (skip === -1) {
-              encoded += (i !== 0 ? separators.skip0 : "") + value;
-            } else if (skip <= 2) {
-              encoded += separators.skip[skip] + value;
-            } else {
-              encoded += separators.skipN + skip.toString() + separators.skip0 + value;
-            }
-            skip = -1;
-          }
-        }
-        if (skip !== -1) {
-          if (skip <= 2) {
-            encoded += separators.skip[skip];
-          } else {
-            encoded += separators.skipN + skip.toString() + separators.skip0;
-          }
-        }
-        return encoded + enclosures.stop;
-      }
+    runLengthEncode = function(partials, enclosures) {
+      return enclosures.start + partials.join(separators.skip0) + enclosures.stop;
     };
 
-    convertToString = function(value, lastValue, rle) {
-      var enclosures, i, k, partial, v, _i, _j, _len, _len1;
-      if (rle && lastValue !== void 0 && value === lastValue) {
-        return '\x10';
-      }
+    convertToString = function(value) {
+      var enclosures, k, partial, v, _i, _len;
       if (value === null || value === void 0) {
         return '\x19';
       }
@@ -93,39 +55,25 @@
         case 'object':
           partial = [];
           if (value instanceof Array) {
-            if ((lastValue != null) && rle) {
-              for (i = _i = 0, _len = value.length; _i < _len; i = ++_i) {
-                v = value[i];
-                partial.push(convertToString(v, lastValue[i], rle));
-              }
-            } else {
-              for (_j = 0, _len1 = value.length; _j < _len1; _j++) {
-                v = value[_j];
-                partial.push(convertToString(v, void 0, rle));
-              }
+            for (_i = 0, _len = value.length; _i < _len; _i++) {
+              v = value[_i];
+              partial.push(convertToString(v));
             }
             enclosures = {
               start: '\x02',
               stop: '\x03'
             };
           } else {
-            if ((lastValue != null) && rle) {
-              for (k in value) {
-                v = value[k];
-                partial.push(convertToString(v, lastValue[k], rle));
-              }
-            } else {
-              for (k in value) {
-                v = value[k];
-                partial.push(convertToString(v, void 0, rle));
-              }
+            for (k in value) {
+              v = value[k];
+              partial.push(convertToString(v));
             }
             enclosures = {
               start: '\x01',
               stop: '\x04'
             };
           }
-          return runLengthEncode(partial, enclosures, rle);
+          return runLengthEncode(partial, enclosures);
         default:
           return String(value);
       }
@@ -138,7 +86,7 @@
     };
 
     objectify = function(text, schema) {
-      var characters, end, findEnd, i, indexStack, j, makeArrayValue, makeBoolean, makeContainerValueInArray, makeContainerValueInObject, makeObjectValue, makeString, makeTyped, makeValue, na, objects, pop, push, separator, set, setArray, setObject, split, stack, start, token, tokens, type, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      var characters, end, findEnd, i, indexStack, j, makeArrayValue, makeBoolean, makeContainerValueInArray, makeContainerValueInObject, makeObjectValue, makeString, makeTyped, makeValue, objects, pop, push, separator, set, setArray, setObject, split, stack, start, token, tokens, top, _i, _len, _ref, _ref1, _ref2;
       stack = new Stack();
       indexStack = new Stack();
       split = function(buffer, characters) {
@@ -170,20 +118,24 @@
           keys = schema;
         } else {
           if (type === "object") {
-            keys = (stack.peek()[2])[(indexStack.peek()) * 2 + 1];
+            keys = (stack.peek().schema)[(indexStack.peek()) * 2 + 1];
           } else {
-            if ((indexStack.peek()) * 2 + 1 < (stack.peek()[2]).length) {
-              keys = (stack.peek()[2])[(indexStack.peek()) * 2 + 1];
+            if ((indexStack.peek()) * 2 + 1 < stack.peek().schema.length) {
+              keys = stack.peek().schema[(indexStack.peek()) * 2 + 1];
             } else {
-              keys = stack.peek()[2];
+              keys = stack.peek().schema;
             }
             if (typeof keys === "string") {
-              keys = stack.peek()[2];
+              keys = stack.peek().schema;
             }
           }
         }
         indexStack.push(index);
-        return stack.push([value, type, keys]);
+        return stack.push({
+          value: value,
+          type: type,
+          schema: keys
+        });
       };
       pop = function() {
         var top;
@@ -238,64 +190,61 @@
       makeContainerValueInObject = function(value) {
         var index, tag, type;
         index = indexStack.pop();
-        tag = stack.peek()[2][index * 2];
-        type = stack.peek()[2][index * 2 + 1];
+        tag = stack.peek().schema[index * 2];
+        type = stack.peek().schema[index * 2 + 1];
         index++;
-        stack.peek()[0][tag] = value;
+        stack.peek().value[tag] = value;
         return indexStack.push(index);
       };
       makeObjectValue = function(value) {
         var index, tag, type;
+        if (value == null) {
+          value = null;
+        }
         index = indexStack.pop();
-        tag = stack.peek()[2][index * 2];
-        type = stack.peek()[2][index * 2 + 1];
+        tag = stack.peek().schema[index * 2];
+        type = stack.peek().schema[index * 2 + 1];
         index++;
         value = makeValue(value, type, tag);
-        stack.peek()[0][tag] = value;
+        stack.peek().value[tag] = value;
         return indexStack.push(index);
       };
       setObject = function(value, separator) {
-        var i, n, _i, _j, _k;
+        var i, n, _i, _j, _results;
         if (!(value instanceof Buffer) && (typeof value === 'array' || typeof value === 'object')) {
           return makeContainerValueInObject(value);
         } else {
-          if (separator === 0x1E) {
-            value = makeObjectValue(lastValue[0]);
-          } else if (separator === 0x1D) {
-            for (i = _i = 0; _i < 1; i = ++_i) {
-              value = makeObjectValue(lastValue[i]);
-            }
-          } else if (separator === 0x1C) {
-            for (i = _j = 0; _j < 2; i = ++_j) {
-              value = makeObjectValue(lastValue[i]);
-            }
-          } else if (separator === 0x1A) {
+          if (separator === 0x1A) {
             n = value;
-            for (i = _k = 0; 0 <= n ? _k < n : _k > n; i = 0 <= n ? ++_k : --_k) {
-              value = makeObjectValue(lastValue[i]);
+            _results = [];
+            for (i = _i = 0; 0 <= n ? _i < n : _i > n; i = 0 <= n ? ++_i : --_i) {
+              _results.push(makeObjectValue());
             }
+            return _results;
+          } else {
+            n = 0x1F - separator;
+            for (i = _j = 0; 0 <= n ? _j < n : _j > n; i = 0 <= n ? ++_j : --_j) {
+              makeObjectValue();
+            }
+            return makeObjectValue(value);
           }
-          return value = makeObjectValue(value);
         }
       };
       makeContainerValueInArray = function(value) {
         var tag, type;
-        tag = stack.peek()[2][0];
-        type = stack.peek()[2][1];
-        if (tag !== "") {
-          console.log("have tag in array! : " + tag + "  from: " + stack.peek()[2]);
-        }
-        return stack.peek()[0].push(value);
+        tag = stack.peek().schema[0];
+        type = stack.peek().schema[1];
+        return stack.peek().value.push(value);
       };
       makeArrayValue = function(value) {
         var tag, type;
-        tag = stack.peek()[2][0];
-        type = stack.peek()[2][1];
+        tag = stack.peek().schema[0];
+        type = stack.peek().schema[1];
         if (tag !== "") {
-          console.log("have tag in array! : " + tag + "  from: " + stack.peek()[2]);
+          console.log("have tag in array! : " + tag + "  from: " + stack.peek().schema);
         }
         value = makeValue(value, type, tag);
-        return stack.peek()[0].push(value);
+        return stack.peek().value.push(value);
       };
       setArray = function(value, separator) {
         if (!(value instanceof Buffer) && (typeof value === 'array' || typeof value === 'object')) {
@@ -305,10 +254,10 @@
         }
       };
       set = function(value) {
-        var na, type, _ref;
+        var top;
         if (!stack.isEmpty()) {
-          _ref = stack.peek(), na = _ref[0], type = _ref[1];
-          if (type === "object") {
+          top = stack.peek();
+          if (top.type === "object") {
             return setObject(value, null);
           } else {
             return setArray(value, null);
@@ -336,26 +285,28 @@
             i++;
           }
           if (token[i] === 0x01) {
-            push({}, "object", 0);
+            push({}, "object", 0, {});
             i++;
           } else if (token[i] === 0x04) {
-            _ref1 = pop(), objects = _ref1[0], na = _ref1[1], na = _ref1[2];
+            top = pop();
+            objects = top.value;
             set(objects);
             i++;
           } else if (token[i] === 0x02) {
-            push([], "array", 0);
+            push([], "array", 0, []);
             i++;
           } else if (token[i] === 0x03) {
-            _ref2 = pop(), objects = _ref2[0], na = _ref2[1], na = _ref2[2];
+            top = pop();
+            objects = top.value;
             set(objects);
             i++;
           } else {
-            _ref3 = stack.peek(), na = _ref3[0], type = _ref3[1], na = _ref3[2];
-            if (type === "object") {
-              _ref4 = findEnd(token, i), start = _ref4[0], end = _ref4[1], i = _ref4[2];
+            top = stack.peek();
+            if (top.type === "object") {
+              _ref1 = findEnd(token, i), start = _ref1[0], end = _ref1[1], i = _ref1[2];
               setObject(token.slice(start, +end + 1 || 9e9), separator);
             } else {
-              _ref5 = findEnd(token, i), start = _ref5[0], end = _ref5[1], i = _ref5[2];
+              _ref2 = findEnd(token, i), start = _ref2[0], end = _ref2[1], i = _ref2[2];
               setArray(token.slice(start, +end + 1 || 9e9), separator);
             }
           }

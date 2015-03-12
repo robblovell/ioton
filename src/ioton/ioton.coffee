@@ -3,48 +3,50 @@ Stack = require('stackjs')
 # TODO:: Throw on errors.
 module.exports = class IOTON
 
-    constructor: (rle = false, encoding = "ascii") ->
+    constructor: (encoding = "ascii") -> #, rle=false) ->
         @encoding = encoding
-        @rle = rle
-        @lastValue = undefined
+#        @rle = rle
+#        @lastValue = undefined
+#        @lastParsedValues = undefined
 
     separators = { skip0: '\x1F', skip: ['\x1E', '\x1D','\x1C'], skipN: '\x1A' }
 
     reset: () ->
-        @lastValue = undefined
+        return true
+#        @lastValue = undefined
 
     stringify: (value) ->
-        stringUTF8 = convertToString(value, @lastValue, true)
-        @lastValue = value
+        stringUTF8 = convertToString(value) #, @lastValue, true)
+#        @lastValue = value
         return new Buffer(stringUTF8, @encoding)
 
-    runLengthEncode = (partials, enclosures, rle) ->
-        if !rle
-            return enclosures.start + partials.join(separators.skip0) + enclosures.stop
-        else
-            encoded = enclosures.start
-            skip = -1
-            for value, i in partials
-                if value == '\x10'
-                    skip++
-                else
-                    if (skip == -1)
-                        encoded += (if i != 0 then separators.skip0 else "") + value
-                    else if (skip <= 2)
-                        encoded += separators.skip[skip] + value
-                    else
-                        encoded += separators.skipN + skip.toString() + separators.skip0 + value
-                    skip = -1
-            if (skip != -1)
-                if (skip <= 2)
-                    encoded += separators.skip[skip]
-                else
-                    encoded += separators.skipN + skip.toString() + separators.skip0
-            return encoded + enclosures.stop
+    runLengthEncode = (partials, enclosures) -> #, rle) ->
+#        if !rle
+        return enclosures.start + partials.join(separators.skip0) + enclosures.stop
+#        else
+#            encoded = enclosures.start
+#            skip = -1
+#            for value, i in partials
+#                if value == '\x10'
+#                    skip++
+#                else
+#                    if (skip == -1)
+#                        encoded += (if i != 0 then separators.skip0 else "") + value
+#                    else if (skip <= 2)
+#                        encoded += separators.skip[skip] + value
+#                    else
+#                        encoded += separators.skipN + skip.toString() + separators.skip0 + value
+#                    skip = -1
+#            if (skip != -1)
+#                if (skip <= 2)
+#                    encoded += separators.skip[skip]
+#                else
+#                    encoded += separators.skipN + skip.toString() + separators.skip0
+#            return encoded + enclosures.stop
 
-    convertToString = (value, lastValue, rle) ->
-        if (rle and lastValue != undefined and value is lastValue)
-            return '\x10' # temporarily use DLE to mark unchanged values.
+    convertToString = (value) -> #, lastValue, rle) ->
+#        if (rle and lastValue != undefined and value is lastValue)
+#            return '\x10' # temporarily use DLE to mark unchanged values.
         if value is null or value is undefined
             return '\x19'
 
@@ -60,25 +62,25 @@ module.exports = class IOTON
                 partial = []
                 if (value instanceof Array)
                     # The value is an array. Stringify every element. Use null as a placeholder for non-IOTON values.
-                    if lastValue? and rle
-                        for v, i in value
-                            partial.push(convertToString(v, lastValue[i], rle))
-                    else
-                        for v in value
-                            partial.push(convertToString(v, undefined, rle))
+#                    if lastValue? and rle
+#                        for v, i in value
+#                            partial.push(convertToString(v, lastValue[i], rle))
+#                    else
+                    for v in value
+                        partial.push(convertToString(v)) #, undefined, rle))
 
                     enclosures = {start: '\x02', stop: '\x03'}
                 else
                     # The value is an object.
-                    if lastValue? and rle
-                        for k,v of value
-                            partial.push(convertToString(v, lastValue[k], rle))
-                    else
-                        for k,v of value
-                            partial.push(convertToString(v, undefined, rle))
+#                    if lastValue? and rle
+#                        for k,v of value
+#                            partial.push(convertToString(v, lastValue[k], rle))
+#                    else
+                    for k,v of value
+                        partial.push(convertToString(v)) #, undefined, rle))
                     enclosures = {start: '\x01', stop: '\x04'}
 
-                return runLengthEncode(partial, enclosures, rle)
+                return runLengthEncode(partial, enclosures) #, rle)
             else # should be never taken  TODO:: decide if it should throw an error here.
                 return String(value);
 
@@ -110,25 +112,36 @@ module.exports = class IOTON
             return tokens
 
         # helper functions.
-        push = (value, type, index=null) ->
+        push = (value, type, index=null) -> # TODO:: pass in last here.
             keys = null
+#            last = null if @rle
             if (indexStack.isEmpty())
                 keys = schema
+#                if @rle
+#                    if @lastParsedValues?
+#                        @haveLast = true
+#                        last = @lastParsedValues
+#                    else
+#                        @haveLast = false
+#                        last = []
             else
                 if type is "object"
-                    keys = (stack.peek()[2])[(indexStack.peek())*2+1]
+                    keys = (stack.peek().schema)[(indexStack.peek())*2+1]
+#                    last = (stack.peek().last)[(indexStack.peek())] if @rle and @haveLast
                 else
                     # TODO:: unexpected array of arrays could cause index issue into the schema.
-                    if (indexStack.peek())*2+1 < (stack.peek()[2]).length
-                        keys = (stack.peek()[2])[(indexStack.peek())*2+1]
-
-                    else keys = stack.peek()[2]
+                    if (indexStack.peek())*2+1 < stack.peek().schema.length
+                        keys = stack.peek().schema[(indexStack.peek())*2+1]
+#                        last = (stack.peek().last)[(indexStack.peek())] if @rle and @haveLast
+                    else
+                        keys = stack.peek().schema
+#                        last = stack.peek().last if @rle and @haveLast
                     if (typeof keys == "string")
-                        keys = stack.peek()[2]
+                        keys = stack.peek().schema
+#                        last = stack.peek().last if @rle and @haveLast
 
             indexStack.push(index)
-            stack.push([value, type, keys])
-#            stack.push({value: value, type: type, schema: keys})
+            stack.push({value: value, type: type, schema: keys}) #, last: last})
 
         pop = () ->
             top = stack.pop()
@@ -175,62 +188,93 @@ module.exports = class IOTON
 
         makeContainerValueInObject = (value) ->
             index = indexStack.pop()
-            tag = stack.peek()[2][(index)*2]
-            type = stack.peek()[2][(index)*2+1]
+            tag = stack.peek().schema[(index)*2]
+            type = stack.peek().schema[(index)*2+1]
             index++
-            stack.peek()[0][tag] = value
+            stack.peek().value[tag] = value
+#            if (@rle and !@haveLast) # Construct the container to hold last values the first time through.
+#                stack.peek().last[index] = value
+
             indexStack.push(index)
 
-        makeObjectValue = (value) ->
+        makeObjectValue = (value=null) ->
             index = indexStack.pop()
-            tag = stack.peek()[2][(index)*2]
-            type = stack.peek()[2][(index)*2+1]
+            tag = stack.peek().schema[(index)*2]
+            type = stack.peek().schema[(index)*2+1]
+#            if (@rle)
+#                if (value == null and !stack.peek().last[index]?)
+#                    throw new Error("must have full object from the other party to reconstruct partial object.  Send Inqury 0x05 to obtain a schema")
+#                else if (value == null)
+#                    if (@haveLast)
+#                        value = stack.peek().last[index]
+#                    else
+#                        throw new Error("Parse does not have the last value set for field, make sure all fields of a full object are set before using run length encoding (rle flag)")
+#                else
+#                    # set the last value
+#                    stack.peek().last[index] = value # save the value in the schema for next time.
             index++
             value = makeValue(value,type, tag)
-            stack.peek()[0][tag] = value #[value, value.toString(), tag, type]
+            stack.peek().value[tag] = value #[value, value.toString(), tag, type]
             indexStack.push(index)
 
         setObject = (value, separator) ->
             if (!(value instanceof Buffer) and (typeof value is 'array' or typeof value is 'object'))
                 makeContainerValueInObject(value)
             else
-                if (separator == 0x1E) # fill 1
-                    value = makeObjectValue(lastValue[0])
-                else if (separator == 0x1D) # fill 2
-                    value = makeObjectValue(lastValue[i]) for i in [0...1]
-                else if (separator == 0x1C) # fill 3
-                    value = makeObjectValue(lastValue[i]) for i in [0...2]
-                else if (separator == 0x1A) # fill N
+                if (separator == 0x1A) # fill N
                     n = value #
-                    value = makeObjectValue(lastValue[i]) for i in [0...n]
-
-                value = makeObjectValue(value)
+                    makeObjectValue() for i in [0...n]
+                else
+                    n = 0x1F-separator
+                    makeObjectValue() for i in [0...n]
+                    makeObjectValue(value)
 
         makeContainerValueInArray = (value) ->
-            tag = stack.peek()[2][0] #[(index)*2]
-            type = stack.peek()[2][1] #[(index)*2+1]
-            if (tag isnt "")
-                console.log("have tag in array! : "+tag+"  from: "+stack.peek()[2])
-            stack.peek()[0].push(value)
+            tag = stack.peek().schema[0] #[(index)*2]
+            type = stack.peek().schema[1] #[(index)*2+1]
+
+            stack.peek().value.push(value)
+#            if (@rle and !@haveLast) # Construct the container to hold last values the first time through.
+#                stack.peek().last.push(value)
 
         makeArrayValue = (value) ->
-            tag = stack.peek()[2][0] #[(index)*2]
-            type = stack.peek()[2][1] #[(index)*2+1]
+            tag = stack.peek().schema[0] #[(index)*2]
+            type = stack.peek().schema[1] #[(index)*2+1]
             if (tag isnt "")
-                console.log("have tag in array! : "+tag+"  from: "+stack.peek()[2])
+                console.log("have tag in array! : "+tag+"  from: "+stack.peek().schema)
+#            if (@rle)
+#                if (value == null and value == null and
+#                (!stack.peek().last? or stack.peek().last.length == 0 or !stack.peek().last[stack.peek().index]?))
+#                    throw new Error("must have full object from the other party to reconstruct partial object.  Send Inqury 0x05 to obtain a schema")
+#                else if (value == null)
+#                    if (@haveLast)
+#                        value = stack.peek().last[stack.peek().index]
+#                    else
+#                        throw new Error("Parse does not have the last value set for field, make sure all fields of a full object are set before using run length encoding (rle flag)")
+#                else
+#                    # set the last value
+#                    stack.peek().last[stack.peek().index] = value # save the value in the schema for next time.
+
             value = makeValue(value, type, tag)
-            stack.peek()[0].push(value) # [value, value.toString(), tag, type])
+            stack.peek().value.push(value) # [value, value.toString(), tag, type])
 
         setArray = (value, separator) ->
             if (!(value instanceof Buffer) and (typeof value is 'array' or typeof value is 'object'))
                 makeContainerValueInArray(value)
             else
+#                if (separator == 0x1A) # fill N
+#                    n = value #
+#                    makeArrayValue() for i in [0...n]
+#                else
+#                    n = 0x1F-separator
+#                    makeArrayValue() for i in [0...n]
+#                    makeArrayValue(value)
                 makeArrayValue(value)
 
         set = (value) ->
             if (!stack.isEmpty())
-                [na, type] = stack.peek()
-                if (type is "object")
+                top = stack.peek()
+                if (top.type is "object")
                     setObject(value, null)
                 else
                     setArray(value, null)
@@ -256,25 +300,29 @@ module.exports = class IOTON
                     i++
                 if (token[i] is 0x01) # new object
                     # push down new object
-                    push({}, "object", 0)
+                    push({}, "object", 0, {})
                     i++
                 else if token[i] is 0x04
                     # pop out one object
-                    [objects, na, na] = pop()
+#                    [objects, na, na]
+                    top = pop()
+                    objects = top.value
                     set(objects)
                     i++
                 else if (token[i] is 0x02) # new array
                     # push down new array
-                    push([], "array", 0)
+                    push([], "array", 0, [])
                     i++
                 else if token[i] is 0x03
                     # pop out one array
-                    [objects, na, na] = pop()
+#                    [objects, na, na]
+                    top = pop()
+                    objects = top.value
                     set(objects)
                     i++
                 else # elements of the object or array.
-                    [na, type, na] = stack.peek()
-                    if (type is "object")
+                    top = stack.peek()
+                    if (top.type is "object")
                         [start, end, i] = findEnd(token, i)
                         setObject(token[(start)..end], separator)
                     else

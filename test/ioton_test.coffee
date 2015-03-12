@@ -123,6 +123,23 @@ describe 'IOTON', ->
         object[2].should.be.equal("purpose")
         done()
 
+    it 'It can PARSE object with strings fields', (done) ->
+        IOTON.reset()
+        object = {one: "one", two: "two", three: "three"}
+        schema = ["one", "string", "two", "two", "three", "three"]
+        ioton = IOTON.stringify(object)
+
+        object = IOTON.parse(ioton, schema)
+        object.should.not.be.null
+        object.should.be.array
+        object.one.should.be.string
+        object.one.should.be.equal("one")
+        object.two.should.be.string
+        object.two.should.be.equal("two")
+        object.three.should.be.string
+        object.three.should.be.equal("three")
+        done()
+
     it 'It can PARSE object', (done) ->
         IOTON.reset()
         object = {
