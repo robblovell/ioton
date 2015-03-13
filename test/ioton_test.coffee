@@ -6,45 +6,56 @@ describe 'IOTON', ->
 
     IOTON = new ioton()
 
-    it 'It can Stringify but not Parse string', (done) ->
+    it 'It can Stringify and Parse string', (done) ->
         IOTON.reset()
         object = "hello world"
         schema = [ "string" ]
 
         ioton = IOTON.stringify(object)
         ioton.toString().should.be.equal('\u000fhello world')
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
+        objectOut = IOTON.parse(ioton, schema)
+        objectOut.should.be.equal(object)
 
-        IOTON.parse.bind(null, ioton, schema).should.throw()
 
         done()
 
-    it 'It can Stringify but not Parse number', (done) ->
+    it 'It can Stringify and Parse number', (done) ->
         IOTON.reset()
         object = 666
         schema = [ "number" ]
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length)+"% "+" xx json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
         ioton.toString().should.be.equal('666')
-
-        IOTON.parse.bind(null, ioton, schema).should.throw()
+        objectOut = IOTON.parse(ioton, schema)
+        objectOut.should.be.equal(object)
 
         done()
 
-    it 'It can Stringify but not Parse boolean', (done) ->
+    it 'It can Stringify and Parse boolean', (done) ->
         IOTON.reset()
         object = true
         schema = [ "boolean" ]
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
         ioton.toString().should.be.equal('T')
-
-        IOTON.parse.bind(null, ioton, schema).should.throw()
+        objectOut = IOTON.parse(ioton, schema)
+        objectOut.should.be.equal(object)
+#        IOTON.parse.bind(null, ioton, schema).should.throw()
 
 
         object = false
         schema = [ "boolean" ]
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
         ioton.toString().should.be.equal('F')
-
-        IOTON.parse.bind(null, ioton, schema).should.throw()
+        objectOut = IOTON.parse(ioton, schema)
+        objectOut.should.be.equal(object)
+#        IOTON.parse.bind(null, ioton, schema).should.throw()
 
         done()
 
@@ -53,8 +64,11 @@ describe 'IOTON', ->
         object = null
         schema = [ "boolean" ]
         ioton = IOTON.stringify(object)
-
-        IOTON.parse.bind(null, ioton, schema).should.throw()
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
+        objectOut = IOTON.parse(ioton, schema)
+        (objectOut==object).should.be.true
+#        IOTON.parse.bind(null, ioton, schema).should.throw()
 
         done()
 
@@ -63,6 +77,8 @@ describe 'IOTON', ->
         object = ["one", "two", "three"]
         schema = ["", "string"]
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
 
         object = IOTON.parse(ioton, schema)
         object.should.not.be.null
@@ -80,6 +96,8 @@ describe 'IOTON', ->
         object = [1, 2, 4]
         schema = ["", "number"]
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
         object = IOTON.parse(ioton, schema)
         object.should.not.be.null
         object.should.be.array
@@ -96,6 +114,8 @@ describe 'IOTON', ->
         object = [true, true, false]
         schema = ["", "boolean"]
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
         object = IOTON.parse(ioton, schema)
         object.should.not.be.null
         object.should.be.array
@@ -112,6 +132,8 @@ describe 'IOTON', ->
         object = [1, true, "purpose"]
         schema = ["", "typed"]
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
         object = IOTON.parse(ioton, schema)
         object.should.not.be.null
         object.should.be.array
@@ -128,6 +150,8 @@ describe 'IOTON', ->
         object = {one: "one", two: "two", three: "three"}
         schema = ["one", "string", "two", "two", "three", "three"]
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
 
         object = IOTON.parse(ioton, schema)
         object.should.not.be.null
@@ -161,6 +185,8 @@ describe 'IOTON', ->
             "field26", [ "field15", "string", "field16", "number" ]
         ]
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
 
         object = IOTON.parse(ioton, schema)
         object.should.not.be.null
@@ -183,15 +209,15 @@ describe 'IOTON', ->
 
     it 'It can PARSE array of arrays', (done) ->
         IOTON.reset()
-        console.log("Schema 1:"+JSON.stringify(schema))
         object = {
             field1: [ [4, 5, 6], [1, 4], [[7], [8]] ]
         }
         schema = [
             "field1", ["", ["", "number"]]
         ]
-        console.log("Schema:"+JSON.stringify(schema))
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
 
         object = IOTON.parse(ioton, schema)
         object.should.not.be.null
@@ -215,8 +241,9 @@ describe 'IOTON', ->
         schema = [
             "field1", ["", ["", "number"]]
         ]
-        console.log("Schema:"+JSON.stringify(schema))
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
 
         object = IOTON.parse(ioton, schema)
         object.should.not.be.null
@@ -240,15 +267,15 @@ describe 'IOTON', ->
 
     it 'It cannot properly PARSE object with array of mismatched objects', (done) ->
         IOTON.reset()
-        console.log("Schema 1:"+JSON.stringify(schema))
         object = {
             field3: [ {field17: "goop", field18: true}, {field20: false, field21: 1} ]
         }
         schema = [
             "field3", ["", ["field17", "string", "field18", "boolean"]]
         ]
-        console.log("Schema:"+JSON.stringify(schema))
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
 
         object = IOTON.parse(ioton, schema)
         object.should.not.be.null
@@ -265,7 +292,6 @@ describe 'IOTON', ->
 
     it 'It can PARSE object with arrays of objects', (done) ->
         IOTON.reset()
-        console.log("Schema 1:"+JSON.stringify(schema))
         object = {
             field1: [ {field15: "baff", field16: 100}, {field15: "zap", field16: 101}, {field15: "biff", field16: 102} ]
             field2: [ {field17: "hello", field18: true}, {field17: "world", field18: false} ]
@@ -276,8 +302,9 @@ describe 'IOTON', ->
             "field2", ["", ["field17", "string", "field18", "boolean"]]
             "field3", ["", ["field20", "boolean", "field21", "number"]]
         ]
-        console.log("Schema:"+JSON.stringify(schema))
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
 
         object = IOTON.parse(ioton, schema)
         object.should.not.be.null
@@ -371,12 +398,13 @@ describe 'IOTON', ->
             ]]
         ]
 
-        console.log("Schema:"+JSON.stringify(schema)+"\n")
 
         ioton = IOTON.stringify(object)
+        json = JSON.stringify(object)
+        console.log("savings-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"ioton length:"+ioton.length+"\n")
+
         test = new Buffer("\u0001\u000Fstring\u001F2\u001FT\u001F\u0019\u001F\u0019\u001F\u0002\u000Felement1\u001F1\u001FT\u001F\u0019\u0003\u001F\u0001\u000Fstring\u001F100\u0004\u001F\u0001\u000Fvalue8\u001F9\u001FF\u001F\u0019\u001F\u00021\u001F2\u001F3\u0003\u001F\u0002T\u001FF\u001FT\u0003\u001F\u0001\u000Fstring\u001F100\u0004\u0004\u001F\u0002T\u001FF\u0003\u001F\u0002\u00024\u001F5\u001F6\u0003\u001F\u00021\u001F4\u0003\u001F\u00027\u001F8\u0003\u0003\u001F\u0001\u000Fstring\u001F9\u0004\u001FT\u001F\u0002\u0001\u000Fstring\u001F\u000Fnumber\u0004\u001F\u0001\u000Fhello\u001F\u000Fthere\u0004\u0003\u0004","ascii")
         for i in [0...test.length] by 1
-            console.log("Expect:" +test[i]+ " Got:"+ioton[i])
             ioton[i].should.equal(test[i])
         ioton.toString().should.equal(test.toString())
         object = IOTON.parse(ioton, schema)

@@ -1,54 +1,42 @@
 Stack = require('stackjs')
 
 # TODO:: Throw on errors.
+# TODO:: namespace schemas,
+# TODO:: management of schemas
+# TODO:: Avro style encoding of nulls, numbers (int/long/float/double), booleans, and strings.
+# TODO:: Booleans?
+# TODO:: To/From JSON
+# TODO:: To/From Avro.
+
 module.exports = class IOTON
 
-    constructor: (encoding = "ascii") -> #, rle=false) ->
+    constructor: (encoding = "ascii") ->
         @encoding = encoding
-#        @rle = rle
-#        @lastValue = undefined
-#        @lastParsedValues = undefined
+        @separatorCharacters = { skip0: '\x1F' }
+        @separators = []
+        @separators[0] = @separatorCharacters.skip0.charCodeAt(0)
 
-    separators = { skip0: '\x1F', skip: ['\x1E', '\x1D','\x1C'], skipN: '\x1A' }
+        @containerCharacters = { objectBegin: '\x01', objectEnd: '\x04', arrayBegin: '\x02', arrayEnd: '\x03' }
+        @containers = []
+        for k,v of @containerCharacters
+            @containers.push(v)
+        @nullCharacter = '\x19'
+        @quoteCharacter = '\x0F'
+        @nullHextet = 0x19
+        @quoteHextet = 0x0F
+        @trueHextet = 0x54
+        @falseHextet = 0x46
 
     reset: () ->
         return true
-#        @lastValue = undefined
 
     stringify: (value) ->
-        stringUTF8 = convertToString(value) #, @lastValue, true)
-#        @lastValue = value
+        stringUTF8 = @convertToString(value)
         return new Buffer(stringUTF8, @encoding)
 
-    runLengthEncode = (partials, enclosures) -> #, rle) ->
-#        if !rle
-        return enclosures.start + partials.join(separators.skip0) + enclosures.stop
-#        else
-#            encoded = enclosures.start
-#            skip = -1
-#            for value, i in partials
-#                if value == '\x10'
-#                    skip++
-#                else
-#                    if (skip == -1)
-#                        encoded += (if i != 0 then separators.skip0 else "") + value
-#                    else if (skip <= 2)
-#                        encoded += separators.skip[skip] + value
-#                    else
-#                        encoded += separators.skipN + skip.toString() + separators.skip0 + value
-#                    skip = -1
-#            if (skip != -1)
-#                if (skip <= 2)
-#                    encoded += separators.skip[skip]
-#                else
-#                    encoded += separators.skipN + skip.toString() + separators.skip0
-#            return encoded + enclosures.stop
-
-    convertToString = (value) -> #, lastValue, rle) ->
-#        if (rle and lastValue != undefined and value is lastValue)
-#            return '\x10' # temporarily use DLE to mark unchanged values.
+    convertToString: (value) =>
         if value is null or value is undefined
-            return '\x19'
+            return @nullCharacter
 
         switch (typeof value)
             when 'number'
@@ -56,48 +44,43 @@ module.exports = class IOTON
             when 'boolean'
                 if (value) then return "T" else return "F"
             when 'string'
-                return '\x0F'+unreserve(value)
+                return @quoteCharacter+unreserve(value)
             when 'object' # , 'array'
                 # Make an array to hold the partial results of stringifying this object value.
                 partial = []
                 if (value instanceof Array)
                     # The value is an array. Stringify every element. Use null as a placeholder for non-IOTON values.
-#                    if lastValue? and rle
-#                        for v, i in value
-#                            partial.push(convertToString(v, lastValue[i], rle))
-#                    else
                     for v in value
-                        partial.push(convertToString(v)) #, undefined, rle))
+                        partial.push(@convertToString(v))
 
-                    enclosures = {start: '\x02', stop: '\x03'}
+                    enclosures = {start: @containerCharacters.arrayBegin, stop: @containerCharacters.arrayEnd}
                 else
                     # The value is an object.
-#                    if lastValue? and rle
-#                        for k,v of value
-#                            partial.push(convertToString(v, lastValue[k], rle))
-#                    else
                     for k,v of value
-                        partial.push(convertToString(v)) #, undefined, rle))
-                    enclosures = {start: '\x01', stop: '\x04'}
+                        partial.push(@convertToString(v))
+                    enclosures = {start: @containerCharacters.objectBegin, stop: @containerCharacters.objectEnd}
 
-                return runLengthEncode(partial, enclosures) #, rle)
+                return enclosures.start + partial.join(@separatorCharacters.skip0) + enclosures.stop
             else # should be never taken  TODO:: decide if it should throw an error here.
                 return String(value);
 
     # This method parses an IOTON text to produce an object or array.
     #
     # It can throw a SyntaxError exception.
-    parse: (buffer, schema) ->
-        objects = objectify(buffer, schema)
-        return objects
 
-    objectify = (text, schema) ->
+    parse: (text, schema) ->
         stack = new Stack()
         indexStack = new Stack()
 
+        splitCharacter = @separatorCharacters.skip0
+        quoteHextet = @quoteHextet
+        trueHextet = @trueHextet
+        falseHextet = @falseHextet
+        nullHextet = @nullHextet
+
         split = (buffer, characters) ->
             tokens = []
-            separator = "\x1F"
+            separator = splitCharacter
             tempString = ""+separator
             for i in [0...buffer.length] by 1
                 if (buffer[i] in characters)
@@ -112,36 +95,23 @@ module.exports = class IOTON
             return tokens
 
         # helper functions.
-        push = (value, type, index=null) -> # TODO:: pass in last here.
+        push = (value, type, index=null) ->
             keys = null
-#            last = null if @rle
             if (indexStack.isEmpty())
                 keys = schema
-#                if @rle
-#                    if @lastParsedValues?
-#                        @haveLast = true
-#                        last = @lastParsedValues
-#                    else
-#                        @haveLast = false
-#                        last = []
             else
                 if type is "object"
                     keys = (stack.peek().schema)[(indexStack.peek())*2+1]
-#                    last = (stack.peek().last)[(indexStack.peek())] if @rle and @haveLast
                 else
-                    # TODO:: unexpected array of arrays could cause index issue into the schema.
                     if (indexStack.peek())*2+1 < stack.peek().schema.length
                         keys = stack.peek().schema[(indexStack.peek())*2+1]
-#                        last = (stack.peek().last)[(indexStack.peek())] if @rle and @haveLast
                     else
                         keys = stack.peek().schema
-#                        last = stack.peek().last if @rle and @haveLast
                     if (typeof keys == "string")
                         keys = stack.peek().schema
-#                        last = stack.peek().last if @rle and @haveLast
 
             indexStack.push(index)
-            stack.push({value: value, type: type, schema: keys}) #, last: last})
+            stack.push({value: value, type: type, schema: keys})
 
         pop = () ->
             top = stack.pop()
@@ -150,29 +120,31 @@ module.exports = class IOTON
 
         makeBoolean = (value) ->
             switch(value[0])
-                when 0x54 # T
+                when trueHextet # T
                     return true
-                when 0x46 # F
+                when falseHextet # F
                     return false
                 else
                     return null
 
         makeString = (value) ->
-            if (value[0] is 0x0F)
+            if (value[0] is quoteHextet)
                 return value.toString().substring(1)
             return value.toString()
 
         makeTyped = (value) ->
             switch (value[0])
-                when 0x46, 0x54  # F, T
+                when nullHextet
+                    return null
+                when trueHextet, falseHextet  # F, T
                     return makeBoolean(value)
-                when 0x0F
+                when quoteHextet
                     return makeString(value)
                 else
                     return number(value) # convert buffer to number.
 
         makeValue = (value, type, tag) ->
-            if (value[0] is 0x19) # Null or undefined
+            if (value[0] is nullHextet) # Null or undefined
                 return null
             switch (type)
                 when "string"
@@ -192,8 +164,6 @@ module.exports = class IOTON
             type = stack.peek().schema[(index)*2+1]
             index++
             stack.peek().value[tag] = value
-#            if (@rle and !@haveLast) # Construct the container to hold last values the first time through.
-#                stack.peek().last[index] = value
 
             indexStack.push(index)
 
@@ -201,59 +171,28 @@ module.exports = class IOTON
             index = indexStack.pop()
             tag = stack.peek().schema[(index)*2]
             type = stack.peek().schema[(index)*2+1]
-#            if (@rle)
-#                if (value == null and !stack.peek().last[index]?)
-#                    throw new Error("must have full object from the other party to reconstruct partial object.  Send Inqury 0x05 to obtain a schema")
-#                else if (value == null)
-#                    if (@haveLast)
-#                        value = stack.peek().last[index]
-#                    else
-#                        throw new Error("Parse does not have the last value set for field, make sure all fields of a full object are set before using run length encoding (rle flag)")
-#                else
-#                    # set the last value
-#                    stack.peek().last[index] = value # save the value in the schema for next time.
             index++
-            value = makeValue(value,type, tag)
-            stack.peek().value[tag] = value #[value, value.toString(), tag, type]
+            value = makeValue(value, type, tag)
+            stack.peek().value[tag] = value
             indexStack.push(index)
 
         setObject = (value, separator) ->
             if (!(value instanceof Buffer) and (typeof value is 'array' or typeof value is 'object'))
                 makeContainerValueInObject(value)
             else
-                if (separator == 0x1A) # fill N
-                    n = value #
-                    makeObjectValue() for i in [0...n]
-                else
-                    n = 0x1F-separator
-                    makeObjectValue() for i in [0...n]
-                    makeObjectValue(value)
+                makeObjectValue(value)
 
         makeContainerValueInArray = (value) ->
             tag = stack.peek().schema[0] #[(index)*2]
             type = stack.peek().schema[1] #[(index)*2+1]
 
             stack.peek().value.push(value)
-#            if (@rle and !@haveLast) # Construct the container to hold last values the first time through.
-#                stack.peek().last.push(value)
 
         makeArrayValue = (value) ->
             tag = stack.peek().schema[0] #[(index)*2]
             type = stack.peek().schema[1] #[(index)*2+1]
             if (tag isnt "")
                 console.log("have tag in array! : "+tag+"  from: "+stack.peek().schema)
-#            if (@rle)
-#                if (value == null and value == null and
-#                (!stack.peek().last? or stack.peek().last.length == 0 or !stack.peek().last[stack.peek().index]?))
-#                    throw new Error("must have full object from the other party to reconstruct partial object.  Send Inqury 0x05 to obtain a schema")
-#                else if (value == null)
-#                    if (@haveLast)
-#                        value = stack.peek().last[stack.peek().index]
-#                    else
-#                        throw new Error("Parse does not have the last value set for field, make sure all fields of a full object are set before using run length encoding (rle flag)")
-#                else
-#                    # set the last value
-#                    stack.peek().last[stack.peek().index] = value # save the value in the schema for next time.
 
             value = makeValue(value, type, tag)
             stack.peek().value.push(value) # [value, value.toString(), tag, type])
@@ -262,13 +201,6 @@ module.exports = class IOTON
             if (!(value instanceof Buffer) and (typeof value is 'array' or typeof value is 'object'))
                 makeContainerValueInArray(value)
             else
-#                if (separator == 0x1A) # fill N
-#                    n = value #
-#                    makeArrayValue() for i in [0...n]
-#                else
-#                    n = 0x1F-separator
-#                    makeArrayValue() for i in [0...n]
-#                    makeArrayValue(value)
                 makeArrayValue(value)
 
         set = (value) ->
@@ -279,43 +211,43 @@ module.exports = class IOTON
                 else
                     setArray(value, null)
 
-        findEnd = (token, i) ->
+        findEnd = (token, i) =>
             j = i
-            while i < token.length and token[i] != 0x03 and token[i] != 0x04
+            while i < token.length and token[i] != @containerCharacters.arrayEnd.charCodeAt(0) and
+            token[i] != @containerCharacters.objectEnd.charCodeAt(0)
                 i++
             return [j,i-1,i]
 
         # the main algorithm.
         objects = null
-        characters = [0x1F,0x1E,0x1D,0x1C,0x1A,0x1F]
-        tokens = split(text, characters)
+        tokens = split(text, @separators)
+        if (tokens[1] == undefined) # simple types, non-array, non-object
+            return makeTyped(text)
         j=0
 
         for token in tokens
             i = 0
             while i < token.length
                 # arrays and objects.
-                if token[i] in characters
+                if token[i] in @separators
                     separator = token[i]
                     i++
-                if (token[i] is 0x01) # new object
+                if (token[i] is @containerCharacters.objectBegin.charCodeAt(0)) # new object
                     # push down new object
                     push({}, "object", 0, {})
                     i++
-                else if token[i] is 0x04
+                else if token[i] is @containerCharacters.objectEnd.charCodeAt(0)
                     # pop out one object
-#                    [objects, na, na]
                     top = pop()
                     objects = top.value
                     set(objects)
                     i++
-                else if (token[i] is 0x02) # new array
+                else if (token[i] is @containerCharacters.arrayBegin.charCodeAt(0)) # new array
                     # push down new array
                     push([], "array", 0, [])
                     i++
-                else if token[i] is 0x03
+                else if token[i] is @containerCharacters.arrayEnd.charCodeAt(0)
                     # pop out one array
-#                    [objects, na, na]
                     top = pop()
                     objects = top.value
                     set(objects)
@@ -332,7 +264,6 @@ module.exports = class IOTON
         return objects
 
     convertToJavascript = (text) ->
-        console.log(text.toString())
         obj = eval('(' + sanatize(text.toString()) + ')');
         return obj
 

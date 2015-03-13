@@ -11,56 +11,73 @@
   describe('IOTON', function() {
     var IOTON;
     IOTON = new ioton();
-    it('It can Stringify but not Parse string', function(done) {
-      var object, schema;
+    it('It can Stringify and Parse string', function(done) {
+      var json, object, objectOut, schema;
       IOTON.reset();
       object = "hello world";
       schema = ["string"];
       ioton = IOTON.stringify(object);
       ioton.toString().should.be.equal('\u000fhello world');
-      IOTON.parse.bind(null, ioton, schema).should["throw"]();
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
+      objectOut = IOTON.parse(ioton, schema);
+      objectOut.should.be.equal(object);
       return done();
     });
-    it('It can Stringify but not Parse number', function(done) {
-      var object, schema;
+    it('It can Stringify and Parse number', function(done) {
+      var json, object, objectOut, schema;
       IOTON.reset();
       object = 666;
       schema = ["number"];
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length) + "% " + " xx json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       ioton.toString().should.be.equal('666');
-      IOTON.parse.bind(null, ioton, schema).should["throw"]();
+      objectOut = IOTON.parse(ioton, schema);
+      objectOut.should.be.equal(object);
       return done();
     });
-    it('It can Stringify but not Parse boolean', function(done) {
-      var object, schema;
+    it('It can Stringify and Parse boolean', function(done) {
+      var json, object, objectOut, schema;
       IOTON.reset();
       object = true;
       schema = ["boolean"];
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       ioton.toString().should.be.equal('T');
-      IOTON.parse.bind(null, ioton, schema).should["throw"]();
+      objectOut = IOTON.parse(ioton, schema);
+      objectOut.should.be.equal(object);
       object = false;
       schema = ["boolean"];
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       ioton.toString().should.be.equal('F');
-      IOTON.parse.bind(null, ioton, schema).should["throw"]();
+      objectOut = IOTON.parse(ioton, schema);
+      objectOut.should.be.equal(object);
       return done();
     });
     it('It can Stringify but not Parse null', function(done) {
-      var object, schema;
+      var json, object, objectOut, schema;
       IOTON.reset();
       object = null;
       schema = ["boolean"];
       ioton = IOTON.stringify(object);
-      IOTON.parse.bind(null, ioton, schema).should["throw"]();
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
+      objectOut = IOTON.parse(ioton, schema);
+      (objectOut === object).should.be["true"];
       return done();
     });
     it('It can PARSE array of strings', function(done) {
-      var object, schema;
+      var json, object, schema;
       IOTON.reset();
       object = ["one", "two", "three"];
       schema = ["", "string"];
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       object = IOTON.parse(ioton, schema);
       object.should.not.be["null"];
       object.should.be.array;
@@ -73,11 +90,13 @@
       return done();
     });
     it('It can PARSE array of numbers', function(done) {
-      var object, schema;
+      var json, object, schema;
       IOTON.reset();
       object = [1, 2, 4];
       schema = ["", "number"];
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       object = IOTON.parse(ioton, schema);
       object.should.not.be["null"];
       object.should.be.array;
@@ -90,11 +109,13 @@
       return done();
     });
     it('It can PARSE array of booleans', function(done) {
-      var object, schema;
+      var json, object, schema;
       IOTON.reset();
       object = [true, true, false];
       schema = ["", "boolean"];
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       object = IOTON.parse(ioton, schema);
       object.should.not.be["null"];
       object.should.be.array;
@@ -107,11 +128,13 @@
       return done();
     });
     it('It can PARSE array of typed', function(done) {
-      var object, schema;
+      var json, object, schema;
       IOTON.reset();
       object = [1, true, "purpose"];
       schema = ["", "typed"];
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       object = IOTON.parse(ioton, schema);
       object.should.not.be["null"];
       object.should.be.array;
@@ -124,7 +147,7 @@
       return done();
     });
     it('It can PARSE object with strings fields', function(done) {
-      var object, schema;
+      var json, object, schema;
       IOTON.reset();
       object = {
         one: "one",
@@ -133,6 +156,8 @@
       };
       schema = ["one", "string", "two", "two", "three", "three"];
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       object = IOTON.parse(ioton, schema);
       object.should.not.be["null"];
       object.should.be.array;
@@ -145,7 +170,7 @@
       return done();
     });
     it('It can PARSE object', function(done) {
-      var object, schema;
+      var json, object, schema;
       IOTON.reset();
       object = {
         field1: "stuff",
@@ -161,6 +186,8 @@
       };
       schema = ["field1", "string", "field2", "number", "field3", "boolean", "field4", "boolean", "field5", "string", "field6", ["", "typed"], "field26", ["field15", "string", "field16", "number"]];
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       object = IOTON.parse(ioton, schema);
       object.should.not.be["null"];
       object.field1.should.be.string;
@@ -180,15 +207,15 @@
       return done();
     });
     it('It can PARSE array of arrays', function(done) {
-      var field, object, schema, _i, _len, _ref;
+      var field, json, object, schema, _i, _len, _ref;
       IOTON.reset();
-      console.log("Schema 1:" + JSON.stringify(schema));
       object = {
         field1: [[4, 5, 6], [1, 4], [[7], [8]]]
       };
       schema = ["field1", ["", ["", "number"]]];
-      console.log("Schema:" + JSON.stringify(schema));
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       object = IOTON.parse(ioton, schema);
       object.should.not.be["null"];
       object.field1.should.be.array;
@@ -208,14 +235,15 @@
       return done();
     });
     it('It can PARSE array of arrays, mismatched schema', function(done) {
-      var field, object, schema, _i, _len, _ref;
+      var field, json, object, schema, _i, _len, _ref;
       IOTON.reset();
       object = {
         field1: [[4, 5, 6], [1, 4], [[[[[[[[7]]]]]]], [8]]]
       };
       schema = ["field1", ["", ["", "number"]]];
-      console.log("Schema:" + JSON.stringify(schema));
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       object = IOTON.parse(ioton, schema);
       object.should.not.be["null"];
       object.field1.should.be.array;
@@ -241,9 +269,8 @@
       return done();
     });
     it('It cannot properly PARSE object with array of mismatched objects', function(done) {
-      var field, object, schema, _i, _len, _ref;
+      var field, json, object, schema, _i, _len, _ref;
       IOTON.reset();
-      console.log("Schema 1:" + JSON.stringify(schema));
       object = {
         field3: [
           {
@@ -256,8 +283,9 @@
         ]
       };
       schema = ["field3", ["", ["field17", "string", "field18", "boolean"]]];
-      console.log("Schema:" + JSON.stringify(schema));
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       object = IOTON.parse(ioton, schema);
       object.should.not.be["null"];
       object.field3.should.be.array;
@@ -273,9 +301,8 @@
       return done();
     });
     it('It can PARSE object with arrays of objects', function(done) {
-      var field, object, schema, _i, _j, _len, _len1, _ref, _ref1;
+      var field, json, object, schema, _i, _j, _len, _len1, _ref, _ref1;
       IOTON.reset();
-      console.log("Schema 1:" + JSON.stringify(schema));
       object = {
         field1: [
           {
@@ -309,8 +336,9 @@
         ]
       };
       schema = ["field1", ["", ["field15", "string", "field16", "number"]], "field2", ["", ["field17", "string", "field18", "boolean"]], "field3", ["", ["field20", "boolean", "field21", "number"]]];
-      console.log("Schema:" + JSON.stringify(schema));
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       object = IOTON.parse(ioton, schema);
       object.should.not.be["null"];
       object.field1.should.be.array;
@@ -342,7 +370,7 @@
       return done();
     });
     return it('It can Stringify and Parse a complex object', function(done) {
-      var i, object, schema, test, _i, _ref;
+      var i, json, object, schema, test, _i, _ref;
       IOTON.reset();
       object = {
         field1: "string",
@@ -385,11 +413,11 @@
         ]
       };
       schema = ["field1", "string", "field2", "number", "field3", "boolean", "field4", "boolean", "field5", "string", "field6", ["", "typed"], "field26", ["field15", "string", "field16", "number"], "field7", ["field8", "string", "field9", "number", "field10", "boolean", "field11", "string", "field12", ["", "number"], "field13", ["", "boolean"], "field14", ["field15", "string", "field16", "number"]], "field17", ["", "boolean"], "field18", ["", ["", "number"]], "field19", ["field20", "string", "field21", "number"], "field22", "boolean", "field23", ["", ["field24", "string", "field25", "number"]]];
-      console.log("Schema:" + JSON.stringify(schema) + "\n");
       ioton = IOTON.stringify(object);
+      json = JSON.stringify(object);
+      console.log("savings-> " + (100 * ioton.length / json.length).toPrecision(2) + "% " + "  json length:" + json.length + " vs " + "ioton length:" + ioton.length + "\n");
       test = new Buffer("\u0001\u000Fstring\u001F2\u001FT\u001F\u0019\u001F\u0019\u001F\u0002\u000Felement1\u001F1\u001FT\u001F\u0019\u0003\u001F\u0001\u000Fstring\u001F100\u0004\u001F\u0001\u000Fvalue8\u001F9\u001FF\u001F\u0019\u001F\u00021\u001F2\u001F3\u0003\u001F\u0002T\u001FF\u001FT\u0003\u001F\u0001\u000Fstring\u001F100\u0004\u0004\u001F\u0002T\u001FF\u0003\u001F\u0002\u00024\u001F5\u001F6\u0003\u001F\u00021\u001F4\u0003\u001F\u00027\u001F8\u0003\u0003\u001F\u0001\u000Fstring\u001F9\u0004\u001FT\u001F\u0002\u0001\u000Fstring\u001F\u000Fnumber\u0004\u001F\u0001\u000Fhello\u001F\u000Fthere\u0004\u0003\u0004", "ascii");
       for (i = _i = 0, _ref = test.length; _i < _ref; i = _i += 1) {
-        console.log("Expect:" + test[i] + " Got:" + ioton[i]);
         ioton[i].should.equal(test[i]);
       }
       ioton.toString().should.equal(test.toString());
