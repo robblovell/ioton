@@ -3,7 +3,7 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'IOTON Server' });
+  res.render('index', { title: 'Mojio\'s IOTON Server' });
 });
 
 module.exports = router;
