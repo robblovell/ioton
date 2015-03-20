@@ -1,16 +1,16 @@
 Stack = require('stackjs')
+Type = require('./binary/Type')
 
 # TODO:: Throw on errors.
 # TODO:: namespace schemas,
 # TODO:: management of schemas
 # TODO:: Avro style encoding of nulls, numbers (int/long/float/double), booleans, and strings.
-# TODO:: Booleans?
-# TODO:: To/From JSON
 # TODO:: To/From Avro.
+
 
 module.exports = class IOTON
 
-    constructor: (encoding = "ascii") ->
+    constructor: (schema='string', encoding = "ascii") ->
         @encoding = encoding
         @separatorCharacters = { skip0: '\x1F' }
         @separators = []
@@ -21,25 +21,41 @@ module.exports = class IOTON
         for k,v of @containerCharacters
             @containers.push(v)
         @nullCharacter = '\x19'
+        @undefinedCharacter = '\x16'
         @quoteCharacter = '\x0F'
         @nullHextet = 0x19
+        @undefinedHextet = 0x16
         @quoteHextet = 0x0F
         @trueHextet = 0x54
         @falseHextet = 0x46
+        @schema(schema)
+
+    schema: (schema) ->
+        @_type = new Type(schema)
+        @_schema = makeSchema(schema)
+        return @_schema
 
     reset: () ->
         return true
+
+    encode: (object) ->
+        return @_type.encode(object)
+
+    decode: (buffer) ->
+        return @_type.decode(buffer)
 
     stringify: (value) ->
         stringUTF8 = @convertToString(value)
         return new Buffer(stringUTF8, @encoding)
 
     convertToString: (value) =>
-        if value is null or value is undefined
+        if value is null
             return @nullCharacter
+        if value is undefined
+            return @undefinedCharacter
 
         switch (typeof value)
-            when 'number'
+            when 'number', 'uint', 'int', 'float'
                 return value.toString()
             when 'boolean'
                 if (value) then return "T" else return "F"
@@ -64,11 +80,63 @@ module.exports = class IOTON
             else # should be never taken  TODO:: decide if it should throw an error here.
                 return String(value);
 
-    # This method parses an IOTON text to produce an object or array.
     #
-    # It can throw a SyntaxError exception.
+    printSchema = (schema, tab="", prefix="") ->
+        if Array.isArray(schema)
+            console.log(prefix+"["+tab)
+            for v, i in schema
+                if (typeof v is 'object' or Array.isArray(v))
+                    printSchema(v, tab+"    ", tab+"["+i+"]=")
+                else
+                    console.log(tab+"["+i+"]="+v)
+            console.log("]"+tab)
+        else if (typeof schema is 'object')
+            console.log(prefix+"{" +tab)
 
-    parse: (text, schema) ->
+            for p,v of schema
+                if (typeof v is 'object' or Array.isArray(v))
+                    printSchema(v, tab+"    ", p+": ")
+                else
+                    console.log(tab+p+": "+v)
+
+            console.log("}" +tab)
+
+        else
+            console.log(tab+"value:" + schema)
+
+    translate = (value) ->
+        switch(value)
+            when 'uint', 'int', 'float'
+                'number'
+            else
+                value
+
+    makeSchema = (schema) ->
+        result = []
+        if Array.isArray(schema)
+            result.push("")
+            for v, i in schema
+                if (typeof v is 'object' or Array.isArray(v))
+                    result.push(makeSchema(v))
+                else
+                    result.push(translate(v))
+                break
+
+        else if (typeof schema is 'object')
+            for p,v of schema
+                result.push(p)
+                if (typeof v is 'object' or Array.isArray(v))
+                    result.push(makeSchema(v))
+                else
+                    result.push(translate(v))
+        else
+            result.push(translate(schema))
+        return result
+
+    # This method parses an IOTON text to produce an object or array.
+    parse: (text, schema=null) ->
+        @schema(schema) if schema
+        schema = @_schema
         stack = new Stack()
         indexStack = new Stack()
 
@@ -77,6 +145,7 @@ module.exports = class IOTON
         trueHextet = @trueHextet
         falseHextet = @falseHextet
         nullHextet = @nullHextet
+        undefinedHextet = @undefinedHextet
 
         split = (buffer, characters) ->
             tokens = []
@@ -136,6 +205,8 @@ module.exports = class IOTON
             switch (value[0])
                 when nullHextet
                     return null
+                when undefinedHextet
+                    return undefined
                 when trueHextet, falseHextet  # F, T
                     return makeBoolean(value)
                 when quoteHextet
@@ -146,14 +217,16 @@ module.exports = class IOTON
         makeValue = (value, type, tag) ->
             if (value[0] is nullHextet) # Null or undefined
                 return null
+            if (value[0] is undefinedHextet) # Null or undefined
+                return undefined
             switch (type)
                 when "string"
                     return makeString(value)
-                when "number"
+                when 'number', 'uint', 'int', 'float'
                     return number(value)
                 when "boolean"
                     return makeBoolean(value)
-                when "typed"
+                when "dynamic"
                     return makeTyped(value)
                 else
                     return makeTyped(value)
@@ -177,7 +250,7 @@ module.exports = class IOTON
             indexStack.push(index)
 
         setObject = (value, separator) ->
-            if (!(value instanceof Buffer) and (typeof value is 'array' or typeof value is 'object'))
+            if (!(value instanceof Buffer) and (Array.isArray(value) or typeof value is 'object'))
                 makeContainerValueInObject(value)
             else
                 makeObjectValue(value)
@@ -198,7 +271,7 @@ module.exports = class IOTON
             stack.peek().value.push(value) # [value, value.toString(), tag, type])
 
         setArray = (value, separator) ->
-            if (!(value instanceof Buffer) and (typeof value is 'array' or typeof value is 'object'))
+            if (!(value instanceof Buffer) and (Array.isArray(value) or typeof value is 'object'))
                 makeContainerValueInArray(value)
             else
                 makeArrayValue(value)
@@ -268,17 +341,18 @@ module.exports = class IOTON
         return obj
 
     # This method produces a JSON from an IOTON.
-    # TODO JSON from IOTON
-    JSON: (value, schema) ->
-        if (schema)
-            @uncontrol(value)
-        else
-            @uncontrol(value)
+    JSON: (iotonStr, schema=null) ->
+        @schema(schema) if schema
+        schema = @_schema
+        object = @parse(iotonStr)
+        return JSON.stringify(object)
 
-    # TODO IOTON from JSON
     # This method produces a IOTON from a JSON.
-    IOTON: (value) ->
-        value
+    IOTON: (jsonStr, schema=null) ->
+        @schema(schema) if schema
+        schema = @_schema
+        object = JSON.parse(jsonStr)
+        return @stringify(object)
 
     unreserve = (text) ->
         return text.replace(/[\u0000-\u0006|\u000E-\u0010|\u0012|\u0014-\u001A|\u001C-\u001F]/g,'')
@@ -314,9 +388,14 @@ module.exports = class IOTON
             else if (text[i] is 0x1F)
                 text[i] = 0x2C # ,
             else if (text[i] is 0x19)
-                text[i] = 0x40 # @ -> null or undefined
-        return String(text)
+                text[i] = 0x40 # @ -> null
+            else if (text[i] is 0x16)
+                text[i] = 0x3F # ? -> undefined       return String(text)
 
     number = (value) ->
         # TODO:: validate numbers?
-        return parseInt(value.toString())
+        str = value.toString()
+        if (~str.indexOf('.'))
+            return parseFloat(str)
+        else
+            return parseInt(str)
