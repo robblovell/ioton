@@ -50,8 +50,15 @@
     }
 
     IOTON.prototype.schema = function(schema) {
+      if (schema == null) {
+        schema = null;
+      }
+      if (schema === null) {
+        return this.schema;
+      }
       this._type = new Type(schema);
-      this._schema = makeSchema(schema);
+      this.parser_schema = makeSchema(schema);
+      this._schema = schema;
       return this._schema;
     };
 
@@ -207,7 +214,7 @@
       if (schema) {
         this.schema(schema);
       }
-      schema = this._schema;
+      schema = this.parser_schema;
       stack = new Stack();
       indexStack = new Stack();
       splitCharacter = this.separatorCharacters.skip0;
@@ -456,7 +463,6 @@
       if (schema) {
         this.schema(schema);
       }
-      schema = this._schema;
       object = this.parse(iotonStr);
       return JSON.stringify(object);
     };
@@ -469,7 +475,6 @@
       if (schema) {
         this.schema(schema);
       }
-      schema = this._schema;
       object = JSON.parse(jsonStr);
       return this.stringify(object);
     };
@@ -528,6 +533,52 @@
       } else {
         return parseInt(str);
       }
+    };
+
+    IOTON.prototype.makeObject = function(object, schema, maker) {
+      var i, property, tmp, value, _i;
+      if (maker == null) {
+        maker = 0;
+      }
+      if (schema === 'number' || schema === 'uint' || schema === 'int' || schema === 'float') {
+        return maker++;
+      } else if (schema === 'boolean') {
+        return maker % 2 === 0;
+      } else if (schema === 'string') {
+        return (maker++).toString();
+      } else if (typeof schema === 'object') {
+        if (schema instanceof Array) {
+          tmp = [];
+          for (i = _i = 0; _i <= 2; i = ++_i) {
+            tmp.push(this.makeObject({}, schema[0]));
+          }
+          return tmp;
+        } else {
+          for (property in schema) {
+            value = schema[property];
+            object[property] = this.makeObject({}, value);
+          }
+        }
+      }
+      return object;
+    };
+
+    IOTON.prototype.make = function(schema) {
+      var object;
+      if (schema == null) {
+        schema = null;
+      }
+      if (schema) {
+        this.schema(schema);
+      }
+      object = this.makeObject({}, this._schema);
+      return object;
+    };
+
+    IOTON.prototype.makeify = function() {
+      var object;
+      object = this.make();
+      return this.stringify(object);
     };
 
     return IOTON;

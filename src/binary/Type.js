@@ -8,25 +8,29 @@
   ioton = require('../ioton');
 
   module.exports = Type = (function() {
-    function Type(type) {
-      if (typeof type === 'string') {
-        if (__indexOf.call(Type.TYPE, type) >= 0 && type !== Type.TYPE.ARRAY && type !== Type.TYPE.OBJECT) {
-          throw new TypeError('Unknown basic type: ' + type);
+    function Type(schema) {
+      if (typeof schema === 'string') {
+        if (__indexOf.call(Type.TYPE, schema) >= 0 && schema !== Type.TYPE.ARRAY && schema !== Type.TYPE.OBJECT) {
+          throw new TypeError('Unknown basic type: ' + schema);
         }
-        this.type = type;
-      } else if (Array.isArray(type)) {
-        if (type.length !== 1) {
+        this.type = schema;
+      } else if (Array.isArray(schema)) {
+        if (schema.length !== 1) {
           throw new TypeError('Invalid array type, it must have exactly one element');
         }
         this.type = Type.TYPE.ARRAY;
-        this.subType = new Type(type[0]);
+        this.subType = new Type(schema[0]);
       } else {
-        if (!type || typeof type !== 'object') {
-          throw new TypeError('Invalid type: ' + type);
+        if (!schema || typeof schema !== 'object') {
+          throw new TypeError('Invalid type: ' + schema);
         }
         this.type = Type.TYPE.OBJECT;
-        this.fields = Object.keys(type).map(function(name) {
-          return new Field(name, type[name]);
+        this.fields = Object.keys(schema).map(function(name) {
+          if (typeof name === 'object') {
+            return new Field(name.type, schema[name.type]);
+          } else {
+            return new Field(name, schema[name]);
+          }
         });
       }
     }

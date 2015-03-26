@@ -30,9 +30,11 @@ module.exports = class IOTON
         @falseHextet = 0x46
         @schema(schema)
 
-    schema: (schema) ->
+    schema: (schema=null) ->
+        return @schema if (schema is null)
         @_type = new Type(schema)
-        @_schema = makeSchema(schema)
+        @parser_schema = makeSchema(schema)
+        @_schema = schema
         return @_schema
 
     reset: () ->
@@ -134,9 +136,9 @@ module.exports = class IOTON
         return result
 
     # This method parses an IOTON text to produce an object or array.
-    parse: (text, schema=null) ->
+    parse: (text, schema = null) ->
         @schema(schema) if schema
-        schema = @_schema
+        schema = @parser_schema
         stack = new Stack()
         indexStack = new Stack()
 
@@ -343,14 +345,12 @@ module.exports = class IOTON
     # This method produces a JSON from an IOTON.
     JSON: (iotonStr, schema=null) ->
         @schema(schema) if schema
-        schema = @_schema
         object = @parse(iotonStr)
         return JSON.stringify(object)
 
     # This method produces a IOTON from a JSON.
     IOTON: (jsonStr, schema=null) ->
         @schema(schema) if schema
-        schema = @_schema
         object = JSON.parse(jsonStr)
         return @stringify(object)
 
@@ -399,3 +399,32 @@ module.exports = class IOTON
             return parseFloat(str)
         else
             return parseInt(str)
+
+    makeObject: (object, schema, maker = 0) ->
+        if (schema is 'number' or schema is 'uint' or schema is 'int' or schema is 'float')
+            return maker++
+        else if (schema is 'boolean')
+            return (maker%2 is 0)
+        else if (schema is 'string')
+            return (maker++).toString()
+        else if (typeof schema is 'object') # , 'array'
+            # Make an array to hold the partial results of stringifying this object value.
+            if (schema instanceof Array)
+                tmp = []
+                for i in [0..2]
+                    tmp.push(@makeObject({}, schema[0]))
+                return tmp
+            else
+                for property, value of schema
+                    object[property] = @makeObject({}, value)
+
+        return object
+
+    make: (schema=null) ->
+        @schema(schema) if schema
+        object = @makeObject({}, @_schema)
+        return object
+
+    makeify: () ->
+        object = @make()
+        return @stringify(object)
