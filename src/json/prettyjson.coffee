@@ -18,4 +18,3 @@ module.exports = class PrettyJSON
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(jsonLine, @replacer)
-

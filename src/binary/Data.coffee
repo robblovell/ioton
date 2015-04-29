@@ -60,4 +60,3 @@ module.exports = class Data
     toBuffer: () ->
         return @_buffer.slice(0, @_length)
 
-

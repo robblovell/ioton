@@ -2,6 +2,7 @@ assert = require('assert')
 should = require('should')
 ioton = require('../src/ioton')
 
+
 Type = require('../src/binary/Type')
 
 describe 'IOTON', ->
