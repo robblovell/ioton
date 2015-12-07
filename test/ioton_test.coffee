@@ -1,13 +1,14 @@
 assert = require('assert')
 should = require('should')
-ioton = require('../src/ioton')
+Ioton = require('../src/Ioton')
+Bioton = require('../src/Bioton')
 
 
 Type = require('../src/binary/Type')
 
 describe 'IOTON', ->
 
-    IOTON = new ioton()
+    IOTON = new Ioton()
 
     it 'It can Stringify and Parse string', (done) ->
         IOTON.reset()
@@ -22,9 +23,9 @@ describe 'IOTON', ->
         objectOut = IOTON.parse(iotonStr, schema)
         objectOut.should.be.equal(object)
 
-        myType = new ioton('string')
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        BIOTON = new Bioton('string')
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("string        savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
         done()
 
@@ -38,9 +39,9 @@ describe 'IOTON', ->
         objectOut = IOTON.parse(iotonStr, schema)
         objectOut.should.be.equal(object)
 
-        myType = new ioton('int')
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        BIOTON = new Bioton('int')
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("int           savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
     it 'It can Stringify and Parse float number', (done) ->
@@ -54,9 +55,9 @@ describe 'IOTON', ->
         objectOut = IOTON.parse(iotonStr, schema)
         objectOut.should.be.equal(object)
 
-        myType = new ioton('number')
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        BIOTON = new Bioton('number')
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("float         savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
         done()
@@ -72,9 +73,9 @@ describe 'IOTON', ->
         objectOut = IOTON.parse(iotonStr, schema)
         objectOut.should.be.equal(object)
 
-        myType = new ioton('boolean')
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        BIOTON = new Bioton('boolean')
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("boolean true  savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
 
@@ -86,9 +87,9 @@ describe 'IOTON', ->
         objectOut = IOTON.parse(iotonStr, schema)
         objectOut.should.be.equal(object)
 
-        myType = new ioton('boolean')
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        BIOTON = new Bioton('boolean')
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("boolean false savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
         done()
@@ -122,9 +123,9 @@ describe 'IOTON', ->
         object[2].should.be.string
         object[2].should.be.equal("three")
 
-        myType = new ioton(['string'])
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        BIOTON = new Bioton(['string'])
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("[ strings ]   savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
         done()
@@ -146,9 +147,9 @@ describe 'IOTON', ->
         object[2].should.be.number
         object[2].should.be.equal(4)
 
-        myType = new ioton(['int'])
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        BIOTON = new Bioton(['int'])
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("[ int ]       savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
         done()
@@ -170,9 +171,9 @@ describe 'IOTON', ->
         object[2].should.be.boolean
         object[2].should.be.equal(false)
 
-        myType = new ioton(['boolean'])
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        BIOTON = new Bioton(['boolean'])
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("[ boolean ]   savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
         done()
@@ -213,9 +214,9 @@ describe 'IOTON', ->
         object.three.should.be.string
         object.three.should.be.equal("three")
 
-        myType = new ioton({ one: 'string', two: 'string', three: 'string'})
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        BIOTON = new Bioton({ one: 'string', two: 'string', three: 'string'})
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("{ object }    savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
         done()
@@ -231,15 +232,7 @@ describe 'IOTON', ->
             field6: ["element1", "1", "false", "null"]
             field26: {field15: "string", field16: 100}
         }
-#        schema = [
-#            "field1", "string",
-#            "field2", "number",
-#            "field3", "boolean",
-#            "field4", "boolean",
-#            "field5", "string",
-#            "field6", ["", "dynamic"],
-#            "field26", [ "field15", "string", "field16", "number" ]
-#        ]
+
         schema = {
             field1: "string"
             field2: 'uint'
@@ -251,10 +244,11 @@ describe 'IOTON', ->
         }
 
         IOTON.schema(schema)
+        BIOTON = new Bioton(schema)
 
         IOTON.reset()
-        encoded = IOTON.encode(object)
-        IOTON.decode(encoded).should.be.eql(object)
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
 
         iotonStr = IOTON.stringify(object)
         json = JSON.stringify(object)
@@ -286,7 +280,7 @@ describe 'IOTON', ->
             field6: ["element1", '1', 'false', 'null']
             field26: {field15: "string", field16: 100}
         }
-        myType = new ioton({
+        BIOTON = new Bioton({
             field1: "string"
             field2: 'uint'
             field3: 'boolean'
@@ -295,8 +289,8 @@ describe 'IOTON', ->
             field6: ["string"]
             field26: {field15: "string", field16: 'uint'}
         })
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("{ object }    savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
         done()
@@ -326,9 +320,9 @@ describe 'IOTON', ->
         object = {
             field1: [ [4, 5, 6], [1, 4], [7, 8] ]
         }
-        myType = new ioton({ field1: [['int']]})
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        BIOTON = new Bioton({ field1: [['int']]})
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("{ object }    savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
         done()
@@ -432,15 +426,15 @@ describe 'IOTON', ->
         object.field3[1].field20.should.be.equal(false)
         object.field3[1].field21.should.be.equal(2.0)
 
-        myType = new ioton(
+        BIOTON = new Bioton(
             {
                 field1: [ {field15: "string", field16: 'float'} ]
                 field2: [ {field17: "string", field18: 'boolean'}]
                 field3: [ {field20: 'boolean', field21: 'float'} ]
             }
         )
-        encoded = myType.encode(object)
-        myType.decode(encoded).should.be.eql(object)
+        encoded = BIOTON.encode(object)
+        BIOTON.decode(encoded).should.be.eql(object)
         console.log("{ object }    savings-> binary: "+((100-100*encoded.length/json.length)).toPrecision(2)+"% "+" ioton:"+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"binary length:"+encoded.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
         done()
@@ -639,3 +633,5 @@ describe 'IOTON', ->
             iotonStr2[i].should.be.equal(iotonStr[i])
 
         done()
+
+

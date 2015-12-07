@@ -1,6 +1,7 @@
 should = require('should')
 assert = require('assert')
-ioton = require('../src/ioton')
+Ioton = require('../src/Ioton')
+Bioton = require('../src/Ioton')
 
 
 Type = require('../src/binary/Type')
@@ -53,7 +54,7 @@ describe 'IOTONB Type', () ->
         })
 
     it 'should encode-decode a conforming object', () ->
-        IOTON = new ioton()
+        IOTON = new Ioton()
         myType = new Type({
             a: 'int',
             b: ['int'],
@@ -81,14 +82,14 @@ describe 'IOTONB Type', () ->
         for i in [0...encoded.length]
             encoded[i].should.be.equal(testResult[i])
 
-        ioton = IOTON.stringify(object)
+        Ioton = IOTON.stringify(object)
 
         json = JSON.stringify(object)
         console.log("js-binary size-> "+(100*encoded.length/json.length).toPrecision(2)+"% "+
-            "ioton size-> "+(100*ioton.length/json.length).toPrecision(2)+"% "+
+            "ioton size-> "+(100*Ioton.length/json.length).toPrecision(2)+"% "+
             "json length:"+json.length+" vs "+
             "js-binary length:"+encoded.length+" vs "+
-            "ioton length:"+ioton.length+"\n")
+            "ioton length:"+Ioton.length+"\n")
 
         myType.decode(encoded).should.be.eql({
             a: 22,
