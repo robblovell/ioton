@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "ioton.js",
+  "sourceRoot": "",
+  "sources": [
+    "ioton.coffee"
+  ],
+  "names": [],
+  "mappings": ";AACA;AAAA,MAAA;;EAAA,KAAA,GAAQ;;EACR,MAAA,GAAS;;EACT,MAAA,GAAS;;EACT,MAAM,CAAC,OAAP,GAAiB;IACb,KAAA,EAAO,KADM;IAEb,MAAA,EAAQ,MAFK;IAGb,MAAA,EAAQ,MAHK;;AAHjB"
+}

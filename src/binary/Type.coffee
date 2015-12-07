@@ -1,5 +1,5 @@
 types = require('./Types')
-ioton = require('../ioton')
+ioton = require('../Ioton')
 
 
 module.exports = class Type
@@ -27,8 +27,8 @@ module.exports = class Type
     types: types
 
     stringify: (value) ->
-        IOTON = new ioton()
-        return ioton.stringify(value)
+        IOTON = new Ioton()
+        return Ioton.stringify(value)
 
     parse: (buffer) ->
 
@@ -188,17 +188,17 @@ ReadState = require('./ReadState')
 Field = require('./Field')
 
 Type.TYPE = {
-        UINT: 'uint',
-        INT: 'int',
-        FLOAT: 'float',
-        NUMBER: 'float',
-        STRING: 'string',
-        BUFFER: 'Buffer',
-        BOOLEAN: 'boolean',
-        JSON: 'json',
-        OID: 'oid',
-        REGEX: 'regex',
-        DATE: 'date',
-        ARRAY: '[array]',
-        OBJECT: 'object'
-    }
+    UINT: 'uint',
+    INT: 'int',
+    FLOAT: 'float',
+    NUMBER: 'float',
+    STRING: 'string',
+    BUFFER: 'Buffer',
+    BOOLEAN: 'boolean',
+    JSON: 'json',
+    OID: 'oid',
+    REGEX: 'regex',
+    DATE: 'date',
+    ARRAY: '[array]',
+    OBJECT: 'object'
+}

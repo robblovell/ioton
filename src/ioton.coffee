@@ -8,7 +8,7 @@ Type = require('./binary/Type')
 # TODO:: To/From Avro.
 
 
-module.exports = class IOTON
+module.exports = class Ioton
 
     constructor: (schema='string', encoding = "ascii") ->
         @encoding = encoding
@@ -37,12 +37,6 @@ module.exports = class IOTON
 
     reset: () ->
         return true
-
-    encode: (object) ->
-        return @_type.encode(object)
-
-    decode: (buffer) ->
-        return @_type.decode(buffer)
 
     stringify: (value) ->
         stringUTF8 = @convertToString(value)
