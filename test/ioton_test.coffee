@@ -6,7 +6,7 @@ Bioton = require('../src/Bioton')
 
 Type = require('../src/binary/Type')
 
-describe 'IOTON', ->
+describe 'BIOTON/IOTON Stringify - Parse', ->
 
     IOTON = new Ioton()
 
@@ -540,7 +540,7 @@ describe 'IOTON', ->
         json = JSON.stringify(object)
         console.log("savings-> "+((100-100*iotonStr.length/json.length)).toPrecision(2)+"% "+"  json length:"+json.length+" vs "+"iotonStr.length:"+iotonStr.length+"\n")
 
-        test = new Buffer("\u0001\u000Fstring\u001F2\u001FT\u001F\u0016\u001F\u0019\u001F\u0002\u000Felement1\u001F1\u001FT\u001F\u0019\u0003\u001F\u0001\u000Fstring\u001F100\u0004\u001F\u0001\u000Fvalue8\u001F9\u001FF\u001F\u0019\u001F\u00021\u001F2\u001F3\u0003\u001F\u0002T\u001FF\u001FT\u0003\u001F\u0001\u000Fstring\u001F100\u0004\u0004\u001F\u0002T\u001FF\u0003\u001F\u0002\u00024\u001F5\u001F6\u0003\u001F\u00021\u001F4\u0003\u001F\u00027\u001F8\u0003\u0003\u001F\u0001\u000Fstring\u001F9\u0004\u001FT\u001F\u0002\u0001\u000Fstring\u001F\u000Fnumber\u0004\u001F\u0001\u000Fhello\u001F\u000Fthere\u0004\u0003\u0004","ascii")
+        test = new Buffer("\u0001\u000Fstring\u001F2\u001FT\u001F\u0007\u001F\u0019\u001F\u0002\u000Felement1\u001F1\u001FT\u001F\u0019\u0003\u001F\u0001\u000Fstring\u001F100\u0004\u001F\u0001\u000Fvalue8\u001F9\u001FF\u001F\u0019\u001F\u00021\u001F2\u001F3\u0003\u001F\u0002T\u001FF\u001FT\u0003\u001F\u0001\u000Fstring\u001F100\u0004\u0004\u001F\u0002T\u001FF\u0003\u001F\u0002\u00024\u001F5\u001F6\u0003\u001F\u00021\u001F4\u0003\u001F\u00027\u001F8\u0003\u0003\u001F\u0001\u000Fstring\u001F9\u0004\u001FT\u001F\u0002\u0001\u000Fstring\u001F\u000Fnumber\u0004\u001F\u0001\u000Fhello\u001F\u000Fthere\u0004\u0003\u0004","ascii")
         for i in [0...test.length] by 1
             iotonStr[i].should.equal(test[i])
         iotonStr.toString().should.equal(test.toString())

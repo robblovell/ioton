@@ -5,7 +5,7 @@ ioton = require('../src/ioton')
 
 Type = require('../src/binary/Type')
 
-describe 'IOTON', ->
+describe 'IOTON object from schema', ->
 
     IOTON = new ioton()
     it 'It can make an object from a schema', () ->

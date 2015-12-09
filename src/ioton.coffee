@@ -21,10 +21,10 @@ module.exports = class Ioton
         for k,v of @containerCharacters
             @containers.push(v)
         @nullCharacter = '\x19'
-        @undefinedCharacter = '\x16'
+        @undefinedCharacter = '\x07'
         @quoteCharacter = '\x0F'
         @nullHextet = 0x19
-        @undefinedHextet = 0x16
+        @undefinedHextet = 0x07
         @quoteHextet = 0x0F
         @trueHextet = 0x54
         @falseHextet = 0x46
