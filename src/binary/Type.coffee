@@ -163,7 +163,6 @@ module.exports = class Type
             else
                 readCode = fieldStr + '.type.read(state)'
         
-        
             if (!field.optional)
                 code = name + ': ' + readCode
             else
