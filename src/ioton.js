@@ -39,10 +39,10 @@
         this.containers.push(v);
       }
       this.nullCharacter = '\x19';
-      this.undefinedCharacter = '\x16';
+      this.undefinedCharacter = '\x07';
       this.quoteCharacter = '\x0F';
       this.nullHextet = 0x19;
-      this.undefinedHextet = 0x16;
+      this.undefinedHextet = 0x07;
       this.quoteHextet = 0x0F;
       this.trueHextet = 0x54;
       this.falseHextet = 0x46;
@@ -50,8 +50,15 @@
     }
 
     Ioton.prototype.schema = function(schema) {
+      if (schema == null) {
+        schema = null;
+      }
+      if (schema === null) {
+        return this.schema;
+      }
       this._type = new Type(schema);
-      this._schema = makeSchema(schema);
+      this.parser_schema = makeSchema(schema);
+      this._schema = schema;
       return this._schema;
     };
 
@@ -199,7 +206,7 @@
       if (schema) {
         this.schema(schema);
       }
-      schema = this._schema;
+      schema = this.parser_schema;
       stack = new Stack();
       indexStack = new Stack();
       splitCharacter = this.separatorCharacters.skip0;
@@ -448,7 +455,6 @@
       if (schema) {
         this.schema(schema);
       }
-      schema = this._schema;
       object = this.parse(iotonStr);
       return JSON.stringify(object);
     };
@@ -461,7 +467,6 @@
       if (schema) {
         this.schema(schema);
       }
-      schema = this._schema;
       object = JSON.parse(jsonStr);
       return this.stringify(object);
     };
@@ -520,6 +525,52 @@
       } else {
         return parseInt(str);
       }
+    };
+
+    Ioton.prototype.makeObject = function(object, schema, maker) {
+      var i, l, property, tmp, value;
+      if (maker == null) {
+        maker = 0;
+      }
+      if (schema === 'number' || schema === 'uint' || schema === 'int' || schema === 'float') {
+        return maker++;
+      } else if (schema === 'boolean') {
+        return maker % 2 === 0;
+      } else if (schema === 'string') {
+        return (maker++).toString();
+      } else if (typeof schema === 'object') {
+        if (schema instanceof Array) {
+          tmp = [];
+          for (i = l = 0; l <= 2; i = ++l) {
+            tmp.push(this.makeObject({}, schema[0]));
+          }
+          return tmp;
+        } else {
+          for (property in schema) {
+            value = schema[property];
+            object[property] = this.makeObject({}, value);
+          }
+        }
+      }
+      return object;
+    };
+
+    Ioton.prototype.make = function(schema) {
+      var object;
+      if (schema == null) {
+        schema = null;
+      }
+      if (schema) {
+        this.schema(schema);
+      }
+      object = this.makeObject({}, this._schema);
+      return object;
+    };
+
+    Ioton.prototype.makeify = function() {
+      var object;
+      object = this.make();
+      return this.stringify(object);
     };
 
     return Ioton;
