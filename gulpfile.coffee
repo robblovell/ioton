@@ -7,13 +7,16 @@ touch = require('touch')
 path = require('path')
 tap = require('gulp-tap')
 sh = require('shelljs')
+jade = require('gulp-jade')
+stylus = require('gulp-stylus')
 
 parallelize = require("concurrent-transform")
 
 threads = 100
 useSourceMaps = true
 coffeeFiles = ['./gulpfile.coffee','./src/**/*.coffee','./test/**/*.coffee','./server/**/*.coffee']
-
+jadeFiles = ['./server/**/*.jade']
+stylusFiles = ['./server/**/*.styl']
 
 handleError = (err) ->
     console.log(err.toString())
@@ -35,9 +38,26 @@ gulp.task('coffeescripts', () ->
     .pipe(parallelize((if useSourceMaps then sourcemaps.init() else gutil.noop()), threads))
 )
 
+gulp.task('jadescripts', () ->
+    gulp.src(jadeFiles)
+    .pipe(parallelize(jade().on('error', gutil.log), threads))
+)
+
+gulp.task('stylusscripts', () ->
+    gulp.src(stylusFiles)
+    .pipe(parallelize(stylus().on('error', gutil.log), threads))
+)
+
+gulp.task('one',  () ->
+    return gulp.src('./css/one.styl')
+    .pipe(stylus())
+    .pipe(gulp.dest('./css/build'))
+)
+
 gulp.task('watch', () ->
     gulp.watch(coffeeFiles, ['coffeescripts'])
-    gulp.watch(paths.sass, ['sass'])
+    gulp.watch(jadeFiles, ['jadescripts'])
+    gulp.watch(stylusFiles, ['stylusscripts'])
 )
 
 gulp.task('default', ['watch', 'coffeescripts'])
