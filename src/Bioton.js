@@ -27,4 +27,4 @@
 
 }).call(this);
 
-//# sourceMappingURL=Bioton.js.map
+//# sourceMappingURL=bioton.js.map

@@ -22,3 +22,4 @@ module.exports = class Field
         @type = new Type(type)
 
     Type = require './Type'
+

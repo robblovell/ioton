@@ -1,6 +1,5 @@
 Ioton = require('./Ioton')
 
-
 module.exports = class IotonP
 
     constructor: (encoding = "ascii", objectEncoding = null) ->

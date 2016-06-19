@@ -44,3 +44,4 @@ module.exports = class ReadState
      # @return {boolean}
     hasEnded: () ->
         return @_offset == @_buffer.length
+
