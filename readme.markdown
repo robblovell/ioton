@@ -63,4 +63,7 @@ BON's approach is include length within the schema specification so that binary 
 Built with love in coffeescript.
 
 TODO: 
-more tests
+More tests
+Separate out PIOTON
+Implement schema definition better, realign with JSON Schema.
+Documentation website with github
