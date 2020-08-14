@@ -8,11 +8,11 @@ assignees:
 
 ### New Change, Reorganization, System or Architecture.
 
-Please describe the change to be made 
+Please describe the change to be made. What are the technical requirements? 
 
 ### Expected Benefit 
 
-Please describe how the change benefit the code base or development speed
+Please describe how the change benefit the code base or development speed. This is the "why" of the needed change.
 
 ### Systems to be changed
 
