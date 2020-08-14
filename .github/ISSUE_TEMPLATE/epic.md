@@ -1,5 +1,5 @@
 ---
-name: Epic
+name: "\U0001f4aa Epic"
 about: An epic is a large feature that cannot be completed in a single sprint
 title: ''
 labels: epic

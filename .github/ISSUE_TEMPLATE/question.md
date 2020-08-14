@@ -1,5 +1,5 @@
 ---
-name: Question
+name: "\U0001f914 Question"
 about: Use this template to ask a question about the project
 title: ''
 labels: question

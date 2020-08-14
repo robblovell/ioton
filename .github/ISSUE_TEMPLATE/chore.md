@@ -1,5 +1,5 @@
 ---
-name: Chore
+name: "\U0001f9d8 Chore"
 about: Add a new chore
 title: ''
 labels: chore

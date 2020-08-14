@@ -1,6 +1,6 @@
  ---
  name: "\U0001F41B Bug Report"
-+about: "Report a new bug, if something isn't working as expected \U0001F914"
+ about: "Report a new bug, if something isn't working as expected \U0001F914"
  title: ''
  labels: bug
  assignees: ''
