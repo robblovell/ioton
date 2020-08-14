@@ -1,5 +1,5 @@
 ---
-name: "\U0001f60d Technical Change Request"
+name: "\U0001f916 Technical Change Request"
 about: Use this template for requesting new technical changes
 title: ''
 labels: enhancement
