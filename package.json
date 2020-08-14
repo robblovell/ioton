@@ -20,7 +20,7 @@
     "assert": "^1.4.1",
     "coffee-script": "^1.10.0",
     "concurrent-transform": "^1.0.0",
-    "debug": "~2.1.1",
+    "debug": "~4.1.1",
     "gulp": "^3.9.1",
     "gulp-coffee": "^2.3.2",
     "gulp-concat": "^2.6.0",
