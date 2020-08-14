@@ -25,3 +25,8 @@ This is the "how" for the feature. What do we need to implement to meet the requ
 
 ### UX/UI Design:
 Optionally add wireframes, mockups, prototypes, etc.
+
+
+### Architetural Drawings
+
+Please add links to relevant documentation, plans and architectural drawings.
