@@ -1,5 +1,5 @@
 # IOTON
-Version 0.0.2
+Version 0.0.3
 
 A JSON like object notation for the internet of things.
 

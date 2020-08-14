@@ -2,7 +2,7 @@
   "name": "ioton",
   "author": "Robb Lovell",
   "description": "Mojio IOTON IOT Object Notation",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": false,
   "repository": {
     "type": "git",
