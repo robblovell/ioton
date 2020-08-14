@@ -1,5 +1,5 @@
 ---
-name: Feature
+name: Feature Request
 about: Create a new feature
 title: ''
 labels: feature
